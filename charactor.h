@@ -1,0 +1,305 @@
+﻿#pragma once
+#include "GamesEngineeringBase.h"
+#include <iostream>
+
+enum class Move_Status {
+	Front = 0,
+	Back = 1,
+	Left = 2,
+	Right = 3,
+	Dead = 4,
+};
+
+struct Position
+{
+	float x;
+	float y;
+};
+
+//The class of every unit, include the main charactor and enemies
+class Unit
+{
+public:
+	enum class Unit_Type {
+		Hero,
+		Enenmy,
+		Bullet,
+		Trap,
+		Null
+	};
+protected:
+	float locate_x, locate_y;
+	unsigned int hitbox;
+	float hitbox_center_x;
+	float hitbox_center_y;
+	Unit_Type unit_type;
+
+public:
+	Unit() : 
+		locate_x(480.0f), 
+		locate_y(352.0f),
+		hitbox(0), 
+		hitbox_center_x(0), 
+		hitbox_center_y(0), 
+		unit_type(Unit_Type::Null) {}
+
+	Unit(Unit_Type ut) : 
+		locate_x(0), 
+		locate_y(0), 
+		hitbox(0),
+		hitbox_center_x(0),
+		hitbox_center_y(0),
+		unit_type(ut) {}
+
+	Unit(float x, float y, Unit_Type ut) :
+		locate_x(static_cast<float>(x)),
+		locate_y(static_cast<float>(y)),
+		hitbox(0),
+		hitbox_center_x(0),
+		hitbox_center_y(0),
+		unit_type(ut) {}
+
+
+	//Load the image
+	//bool load_image(std::string filename);
+
+	//The default function of draw the image
+	//virtual void draw(GamesEngineeringBase::Window& canvas) = 0;
+
+	//Get the unit's X location
+	inline float get_x()
+	{
+		return locate_x;
+	}
+	
+	//Get the unit's Y location
+	inline float get_y()
+	{
+		return locate_y;
+	}
+
+	inline unsigned int get_hitbox() { return hitbox; }
+
+	//inline unsigned int get_hitbox_x() { return hitbox_center_x; }
+	inline float get_hitbox_x() { return hitbox_center_x; }
+
+	//inline unsigned int get_hitbox_y() { return hitbox_center_y; }
+	inline float get_hitbox_y() { return hitbox_center_y; }
+
+
+	//Get the inmage's width
+	virtual unsigned int get_width() = 0;
+
+
+	//Get the image's height
+	virtual unsigned int get_height() = 0;
+
+
+	~Unit() {}
+};
+
+const unsigned int charactor_move_status_num = 5;
+class Charactor : public Unit
+{
+
+private:
+	GamesEngineeringBase::Image image[charactor_move_status_num];
+	int health; //charactor's health,storage the current health num
+	unsigned int speed;
+	unsigned int attack;
+	Move_Status m_status;
+
+public:
+	Charactor() : 
+		Unit(480.f, 532.f, Unit_Type::Hero),
+		health(10),
+		speed(250),
+		attack(0),
+		m_status(Move_Status::Front) {}
+
+	Charactor(float x, float y, int health, int speed, int attack) :
+		Unit(x, y, Unit_Type::Hero),
+		health(health),
+		speed(speed),
+		attack(attack),
+		m_status(Move_Status::Front) {
+	}
+
+	void get_attack(unsigned int attack) 
+	{ 
+		health -= attack; 
+		std::cout << "health: " << health << std::endl;
+	}
+
+	bool check_if_dead() 
+	{
+		if (health <= 0)
+			return true;
+		else
+			return false;
+	}
+
+	bool load_image(std::string Heroname);
+
+	void draw(GamesEngineeringBase::Window& canvas, unsigned int x, unsigned int y);
+
+	void draw_incenter(GamesEngineeringBase::Window& canvas);
+
+	void update(GamesEngineeringBase::Window& canvas, float x, float y, Move_Status status);
+
+	void update(Move_Status stauts);
+
+	GamesEngineeringBase::Image& operator[](unsigned int index) { return image[index]; }
+
+	//Get the inmage's width
+	inline unsigned int get_width()
+	{
+		return image[0].width;
+	}
+
+	//Get the image's height
+	inline unsigned int get_height()
+	{
+		return image[0].height;
+	}
+
+	//Get the charactor's speed
+	inline unsigned int get_speed()
+	{
+		return speed;
+	}
+
+	//Get the charactor's health
+	int get_health()
+	{
+		return health;
+	}
+
+	~Charactor() 
+	{
+
+	}
+};
+
+enum class Enemy_type
+{
+	Slime = 0,
+	Bug = 1,
+	FlySpookmoth = 2,
+	Pebblin = 3,
+	MAX_TYPES
+};
+
+struct Enemy_data {
+	std::string name;
+	Enemy_type type;
+	int health;
+	unsigned int speed;
+	unsigned int attack;
+};
+
+class Enemy_index
+{
+	unsigned int num = static_cast<unsigned int>(Enemy_type::MAX_TYPES);
+	Enemy_data enemy_templates[static_cast<unsigned int>(Enemy_type::MAX_TYPES)] = {
+	{"Slime",         Enemy_type::Slime,          5,  100, 1},
+	{"Bug",           Enemy_type::Bug,            7,  150, 2},
+	{"FlySpookmoth",  Enemy_type::FlySpookmoth,  10,  100, 5},
+	{"Pebblin",       Enemy_type::Pebblin,       15,   50, 5}
+	};
+	//std::string arr[enemy_type_n] = { Slime, Bug, FlySpookmoth, Pebblin};
+public:
+
+	unsigned int const get_enemy_index_num() { return num; }
+
+	Enemy_type string_to_enemy_type(std::string name)
+	{
+		for (unsigned int i = 0; i < static_cast<unsigned int>(Enemy_type::MAX_TYPES); i++)
+		{
+			if (name == enemy_templates[i].name)
+				return static_cast<Enemy_type>(i);
+		}
+	}
+
+	std::string enemy_type_to_string(Enemy_type e_type)
+	{
+		return enemy_templates[static_cast<unsigned int>(e_type)].name;
+	}
+
+	Enemy_data& operator[] (unsigned int index) { return enemy_templates[index]; }
+	Enemy_data& operator[] (Enemy_type name) { return enemy_templates[static_cast<int>(name)]; }
+};
+
+
+const unsigned int enemy_move_status_num = 4;
+class Enemy : public Unit
+{
+	std::string enemy_name;
+	Enemy_type type;
+	GamesEngineeringBase::Image image[enemy_move_status_num];
+	int health; //enemy's health,storage the current health num
+	unsigned int speed;
+	unsigned int attack;
+	Move_Status m_status;
+
+public:
+	Enemy(std::string name, Enemy_type ty) :
+		enemy_name(name),
+		type(ty),
+		Unit(600.f, 600.f, Unit_Type::Enenmy),
+		health(10),
+		speed(2),
+		attack(0),
+		m_status(Move_Status::Front) {}
+
+	Enemy(std::string name, Enemy_type ty, unsigned int health, unsigned int speed) :
+		enemy_name(name),
+		type(ty),
+		Unit(600, 600, Unit_Type::Enenmy),
+		health(health),
+		speed(speed),
+		attack(0),
+		m_status(Move_Status::Front) {
+	}
+
+	Enemy(std::string name, Enemy_type ty,float x, float y, unsigned int health, unsigned int speed, unsigned int attack) :
+		enemy_name(name),
+		type(ty),
+		Unit(x, y, Unit_Type::Enenmy),
+		health(health),
+		speed(speed),
+		attack(attack),
+		m_status(Move_Status::Front) {
+	}
+	bool load_image();
+
+	void draw(GamesEngineeringBase::Window& canvas,int x, int y);
+
+	void update(GamesEngineeringBase::Window& canvas, float x, float y, Move_Status status);
+
+	void update(float x, float y);
+
+	GamesEngineeringBase::Image& operator[](unsigned int index) { return image[index]; }
+
+	inline std::string get_name() { return enemy_name; }
+
+	inline Enemy_type get_type() { return type; }
+
+	//Get the inmage's width
+	inline unsigned int get_width() { return image[0].width; }
+
+	//Get the image's height
+	inline unsigned int get_height() { return image[0].height; }
+
+	//Get the charactor's speed
+	inline unsigned int get_speed() { return speed; }
+
+	//Get the charactor's health
+	int get_health() { return health; }
+
+	~Enemy()
+	{
+
+	}
+};
+
