@@ -24,6 +24,7 @@ int main()
 	Camera cam(canvas, map.get_map_width_pix(), map.get_map_height_pix());
 	
 	Manager_enemy ene(canvas);
+	Manager_bullet bul(canvas);
 	//Game loop
 	while (running)
 	{
@@ -49,9 +50,11 @@ int main()
 		hero.update(canvas, map, dt);
 		cam.update(hero);
 		ene.update(canvas, map, hero,cam, dt);
+		bul.update(canvas, map, hero, ene, cam, dt);
 		map.draw(canvas, hero, cam);
 		hero.draw(canvas, map, cam);
 		ene.draw(canvas, map, cam);
+		bul.draw(canvas, map, cam);
 
 		// Display the frame on the screen. This must be called once the frame 
 		//is finished in order to display the frame.

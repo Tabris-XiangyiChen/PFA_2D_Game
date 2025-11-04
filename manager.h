@@ -8,17 +8,57 @@ class Manager_hero
 {
 	Charactor Hero;
 	Move_Status move_status = Move_Status::Front;
+	float invincible_time_elapsed = 0;
+	float attack_elapsed;
+	float aoe_elapsed;
 public:
-	Manager_hero(GamesEngineeringBase::Window& canvas) : Hero()
+	Manager_hero(GamesEngineeringBase::Window& canvas) : Hero(), attack_elapsed(0), aoe_elapsed(0)
 	{
 		Hero.load_image("Wizard");
 	}
 
 	void update(GamesEngineeringBase::Window& canvas, Manager_map& map, float time);
 
+	void update_cd(float time)
+	{
+		attack_elapsed += time;
+		aoe_elapsed += time;
+		invincible_time_elapsed += time;
+	}
+
+	void zero_invincible_time_elapsed()
+	{
+		invincible_time_elapsed = 0;
+	}
+
+	void zero_attack_elapsed()
+	{
+		attack_elapsed = 0;
+	}
+
+	void zero_aoe_elapsed()
+	{
+		aoe_elapsed = 0;
+	}
+
 	void draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam);
 
-	void get_attack(unsigned int attack) { Hero.get_attack(attack); }
+	void suffer_attack(unsigned int attack) { Hero.suffer_attack(attack); }
+
+	unsigned int get_hero_attack() { return Hero.get_attack(); }
+
+	float get_attack_cd() { return Hero.get_attack_cd(); }
+
+	float get_aoe_cd() { return Hero.get_aoe_cd(); }
+
+	float get_invincible_time() { return Hero.get_invincible_time(); }
+
+	float get_invincible_time_elapsed() { return invincible_time_elapsed;  }
+
+	float get_attack_elapsed() { return attack_elapsed; }
+
+	float get_aoe_elapsed() { return aoe_elapsed; }
+
 
 	//Get the unit's X location
 	inline float get_x() { return Hero.get_x(); }
@@ -108,13 +148,15 @@ public:
 const unsigned int max_enemy_num = 100;
 class Manager_enemy
 {
-	Enemy* enemy[max_enemy_num];
 	Enemy_index e_index;
-	Move_Status move_status[max_enemy_num];
-	float enemy_create_time_elapsed = 0;
-	float hero_invincible_time_elapsed = 0;
+	Enemy* enemy[max_enemy_num];
 	unsigned int current_size = 0;
+	Move_Status move_status[max_enemy_num];
+
+	float enemy_create_time_elapsed = 0;
 	float create_threshold = 3.f;
+
+	float enemy_attack_time_elapsed[max_enemy_num];
 
 	unsigned int slime_max_num = 10;
 	unsigned int slime_current_num = 0;
@@ -128,7 +170,12 @@ public:
 
 	void create_enemy(Manager_map& map,Camera& cam);
 
-	void check_delete_enemy(unsigned int i);
+	void delete_enemy(unsigned int i);
+
+	void suffer_attack(unsigned int index, unsigned int attack)
+	{
+		enemy[index]->suffer_attack(attack);
+	}
 
 	void update(GamesEngineeringBase::Window& canvas, Manager_map& map, Manager_hero& hero, Camera& cam, float time);
 
@@ -151,4 +198,77 @@ public:
 	inline float get_hit_box_x(unsigned int index) { return enemy[index]->get_hitbox_x(); }
 
 	inline float get_hit_box_y(unsigned int index) { return enemy[index]->get_hitbox_y(); }
+
+	Enemy* operator[] (unsigned int index) { return enemy[index]; }
+
+	~Manager_enemy()
+	{
+		for (unsigned int i = 0; i < max_enemy_num; i++)
+		{
+			if (enemy[i] == nullptr)
+			{
+				delete enemy[i];
+			}
+		}
+	}
+};
+
+const unsigned int max_bullet_num = 100;
+class Manager_bullet
+{
+	Bullet* bullet[max_bullet_num];
+	Bullet_index e_index;
+	Move_Status move_status[max_bullet_num];
+	//float enemy_create_time_elapsed = 0;
+	unsigned int current_size = 0;
+
+public:
+	Manager_bullet(GamesEngineeringBase::Window& canvas);
+
+	Position create_out_camera_pos(Manager_map& map, Camera& cam, bool if_near_cam);
+
+	void move_to_nearest_enemy(unsigned int i, Position pos, Manager_enemy& enemy, float time);
+
+	void create_bullet(std::string name, Bullet_type ty, Unit_Type fr);
+
+	void create_hero_bullet(Manager_hero& hero);
+
+	void delete_bullet(unsigned int i);
+
+	void update(GamesEngineeringBase::Window& canvas, Manager_map& map, Manager_hero& hero, Manager_enemy& enemy,  Camera& cam, float time);
+
+	void draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam);
+
+	//Get the unit's X location
+	inline float get_x(unsigned int index) { return bullet[index]->get_x(); }
+
+	//Get the unit's Y location
+	inline float get_y(unsigned int index) { return bullet[index]->get_y(); }
+
+	//int get_health(unsigned int index) { return bullet[index]->get_health(); }
+
+	unsigned int get_attack(unsigned int index) { return bullet[index]->get_attack(); }
+
+	//Get the image's width
+	inline unsigned int get_width(unsigned int index) { return bullet[index]->get_width(); }
+
+	//Get the image's height
+	inline unsigned int get_height(unsigned int index) { return bullet[index]->get_height(); }
+
+	inline float get_hit_box_x(unsigned int index) { return bullet[index]->get_hitbox_x(); }
+
+	inline float get_hit_box_y(unsigned int index) { return bullet[index]->get_hitbox_y(); }
+
+	Bullet* operator[] (unsigned int index) { return bullet[index]; }
+
+	~Manager_bullet()
+	{
+		for (unsigned int i = 0; i < max_bullet_num; i++)
+		{
+			if (bullet[i] == nullptr)
+			{
+				delete bullet[i];
+			}
+		}
+	}
 };
