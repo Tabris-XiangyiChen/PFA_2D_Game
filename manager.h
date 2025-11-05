@@ -4,6 +4,26 @@
 class Manager_map;
 class Camera;
 
+Position static rebound(Position from, Position to, float hitbox_len)
+{
+	float dx = from.x - to.x;
+	float dy = from.y - to.y;
+	float dist = sqrt(dx * dx + dy * dy);
+
+	if (dist < 1e-4f)
+		return from;
+
+	//float nx = dx2 / max(dist, 0.1f);
+	//float ny = dy2 / max(dist, 0.1f);
+	float nx = dx / dist;
+	float ny = dy / dist;
+	float overlap = (hitbox_len - dist);
+	if (overlap <= 0.0f)
+		return from;
+	float push = overlap * 0.1f;
+	return { from.x + nx * push , from.y + ny * push };
+}
+
 class Manager_hero
 {
 	Charactor Hero;
@@ -144,6 +164,16 @@ public:
 	{
 		return map.get_map_height() * map.get_tiles_height();
 	}
+
+	inline unsigned int get_trap_num() { return map.get_trap_num(); }
+
+	unsigned int get_tiles_width() { return map.get_tiles_width(); }
+
+	Position get_trap_position(unsigned int index) { return { map.get_trap(index)->get_hitbox_x(), map.get_trap(index)->get_hitbox_y()}; }
+
+	unsigned int get_trap_hitbox(unsigned int index) { return map.get_trap(index)->get_hitbox(); }
+
+	unsigned int get_trap_attack(unsigned int index) { return map.get_trap(index)->get_attack(); }
 };
 
 const unsigned int max_enemy_num = 100;

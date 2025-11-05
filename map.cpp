@@ -42,6 +42,13 @@ void Tiles::draw(GamesEngineeringBase::Window& canvas, unsigned int id,
 	}
 }
 
+void Trap::trap_init(unsigned int tiles_width, unsigned int tiles_height)
+{
+	hitbox = tiles_width / 2;
+	hitbox_center_x = locate_x + tiles_height / 2;
+	hitbox_center_y = locate_y + tiles_height / 2;
+}
+
 void Trap::trap_init(std::string name, Map& map, float x, float y)
 {
 	for (unsigned int i = 0; i < trap_status_num; i++)
@@ -135,7 +142,16 @@ bool Map::load_map(const char* filename)
 			ss >> comma;
 			at(w, h) = map_id;
 			if(map_id == 24)
-
+				for (unsigned int i = 0; i < trap_num; i++)
+				{
+					if (trap[i] != nullptr)
+						continue;
+					trap[i] = new Trap("tarp", w * get_tiles_width(), h * get_tiles_height(),
+						10, 0, 2, 0);
+					trap[i]->trap_init(get_tiles_width(), get_tiles_height());
+					//std::cout << "trap" << trap[i]->get_hitbox() << " " << trap[i]->get_hitbox_x() << trap[i]->get_hitbox_y() << std::endl;
+					break;
+				}
 			std::cout << at(w, h) << " ";
 		}
 		std::cout << std::endl;

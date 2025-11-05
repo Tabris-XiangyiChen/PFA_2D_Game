@@ -2,45 +2,69 @@
 
 void Manager_hero::update(GamesEngineeringBase::Window& canvas, Manager_map& map, float time) 
 {
-	update_cd(time);
 	if(!Hero.check_if_dead())
 	{
-		//int x = 0;
-		//int y = 0;
-		float x = Hero.get_x();
-		float y = Hero.get_y();
+		update_cd(time);
+		Position pos = { 0, 0 };
+		float new_x = Hero.get_x();
+		float new_y = Hero.get_y();
 		//int speed = static_cast<int>(max(static_cast<float>(Hero.get_speed() * 50) * time, 1.0f));
 		float speed = max(static_cast<float>(Hero.get_speed()) * time, 1.0f);
 
 		//std::cout << "speed is " << speed << "the time is " << time << std::endl;
+
+		for (unsigned int i = 0; i < map.get_trap_num(); i++)
+		{
+			
+			float dx = Hero.get_hitbox_x() - map.get_trap_position(i).x;
+			float dy = Hero.get_hitbox_y() - map.get_trap_position(i).y;
+			float dist = sqrt(dx * dx + dy * dy);
+			float hitbox_dist = static_cast<float>(Hero.get_hitbox() + map.get_trap_hitbox(i));
+			if (dist < hitbox_dist)
+			{
+				if (invincible_time_elapsed > Hero.get_invincible_time())
+				{
+					Hero.suffer_attack(map.get_trap_attack(i));
+					zero_invincible_time_elapsed();
+				}
+				pos = rebound({ Hero.get_hitbox_x(), Hero.get_hitbox_y() }, map.get_trap_position(i), hitbox_dist);
+				new_x = pos.x - static_cast<float>(Hero.get_width() / 2);
+				new_y = pos.y - static_cast<float>(Hero.get_height() / 2);
+				std::cout << " touch the trap" << std::endl;
+				Hero.update(canvas, new_x, new_y, move_status);
+				//return;
+			}
+		}
 
 		//move_status = Move_Status::Front;
 		if (canvas.keyPressed('W'))
 		{
 			move_status = Move_Status::Back;
 			//y -= Hero.get_speed();
-			y -= speed;
+			new_y -= speed;
 		}
 		if (canvas.keyPressed('S'))
 		{
 			move_status = Move_Status::Front;
-			y += speed;
+			new_y += speed;
 		}
 		if (canvas.keyPressed('A'))
 		{
 			move_status = Move_Status::Left;
-			x -= speed;
+			new_x -= speed;
 		}
 		if (canvas.keyPressed('D'))
 		{
 			move_status = Move_Status::Right;
-			x += speed;
+			new_x += speed;
 		}
-		x = max(0, x);
-		x = min(static_cast<int>(map.get_map_width_pix()) - static_cast<int>(Hero.get_width()), x);
-		y = max(0, y);
-		y = min(static_cast<int>(map.get_map_height_pix()) - static_cast<int>(Hero.get_height()), y);
-		Hero.update(canvas, x, y, move_status);
+		new_x = max(0, new_x);
+		new_x = min(static_cast<int>(map.get_map_width_pix()) - static_cast<int>(Hero.get_width()), new_x);
+		new_y = max(0, new_y);
+		new_y = min(static_cast<int>(map.get_map_height_pix()) - static_cast<int>(Hero.get_height()), new_y);
+
+		Hero.update(canvas, new_x, new_y, move_status);
+		return;
 	}
 	else 
 	{
@@ -342,7 +366,8 @@ void Manager_enemy::update(GamesEngineeringBase::Window& canvas, Manager_map& ma
 			float dist = sqrt(dx2 * dx2 + dy2 * dy2);
 			float minDist = static_cast<float>(enemy[i]->get_hitbox() + enemy[j]->get_hitbox());
 
-			if (dist < minDist && dist > 0.1f) {
+			if (dist < minDist && dist > 0.1f)
+			{
 				float nx = dx2 / dist;
 				float ny = dy2 / dist;
 				float overlap = (minDist - dist);
@@ -357,7 +382,7 @@ void Manager_enemy::update(GamesEngineeringBase::Window& canvas, Manager_map& ma
 		float dist_enemy_to_hero = sqrt(dx3 * dx3 + dy3 * dy3);
 		float mid_dist = static_cast<float>(hero.get_hitbox() + enemy[i]->get_hitbox());
 
-		if (dist_enemy_to_hero < mid_dist && dist_enemy_to_hero > 0.1f && hero.get_invincible_time_elapsed() > 1.f) {
+		if (dist_enemy_to_hero < mid_dist && dist_enemy_to_hero > 0.1f && hero.get_invincible_time_elapsed() > hero.get_invincible_time()) {
 			//float nx = dx3 / dist_enemy_to_hero;
 			//float ny = dy3 / dist_enemy_to_hero;
 			//float overlap = (mid_dist - dist_enemy_to_hero);

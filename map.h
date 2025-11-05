@@ -50,7 +50,7 @@ public:
 	//	m_status(Move_Status::Front) {
 	//}
 
-	Trap(std::string name = "NULL") :
+	Trap(std::string name = "") :
 		trap_name(name),
 		//type(ty),
 		Unit(600.f, 600.f, Unit_Type::Trap),
@@ -60,15 +60,15 @@ public:
 		m_status(Move_Status::Front) {
 	}
 
-	Trap(std::string name, unsigned int health, unsigned int speed) :
-		trap_name(name),
-		//type(ty),
-		Unit(600, 600, Unit_Type::Trap),
-		health(health),
-		speed(speed),
-		attack(0),
-		m_status(Move_Status::Front) {
-	}
+	//Trap(std::string name, unsigned int health, unsigned int speed) :
+	//	trap_name(name),
+	//	//type(ty),
+	//	Unit(600, 600, Unit_Type::Trap),
+	//	health(health),
+	//	speed(speed),
+	//	attack(0),
+	//	m_status(Move_Status::Front) {
+	//}
 
 	Trap(std::string name, float x, float y, unsigned int health,
 		unsigned int speed, unsigned int attack, unsigned int attack_cd) :
@@ -79,29 +79,29 @@ public:
 		speed(speed),
 		attack(attack),
 		attack_cd(attack_cd),
-		m_status(Move_Status::Front) {
+		m_status(Move_Status::Front)
+	{
 	}
-	bool load_image();
+
+	void trap_init(unsigned int tiles_width, unsigned int tiles_height);
 
 	void trap_init(std::string name, Map& map, float x, float y);
 
-	void draw(GamesEngineeringBase::Window& canvas, int x, int y);
+	//void update(GamesEngineeringBase::Window& canvas, float x, float y, Move_Status status);
 
-	void update(GamesEngineeringBase::Window& canvas, float x, float y, Move_Status status);
+	//void update(float x, float y);
 
-	void update(float x, float y);
+	//void suffer_attack(unsigned int attack)
+	//{
+	//	health -= attack;
 
-	void suffer_attack(unsigned int attack)
-	{
-		health -= attack;
+	//	if (health < 0)
+	//		health = 0;
+	//	//std::cout << "health: " << health << std::endl;
 
-		if (health < 0)
-			health = 0;
-		//std::cout << "health: " << health << std::endl;
+	//}
 
-	}
-
-	GamesEngineeringBase::Image& operator[](unsigned int index) { return image[index]; }
+	//GamesEngineeringBase::Image& operator[](unsigned int index) { return image[index]; }
 
 	inline std::string get_name() { return trap_name; }
 
@@ -135,7 +135,7 @@ class Map
 	unsigned int map_width, map_height;
 	unsigned int trap_num;
 	unsigned int* tiles;
-	Trap* trap;
+	Trap** trap;
 public:
 	Map() :
 		tiles_width(0),
@@ -155,7 +155,12 @@ public:
 	void allocate()
 	{
 		tiles = new unsigned int[map_width * map_height];
-		trap = new Trap[trap_num];
+		trap = new Trap*[trap_num];
+		for (unsigned int i = 0; i < trap_num; i++)
+		{
+			trap[i] = nullptr;
+		}
+		std::cout << trap_num << std::endl;
 	}
 
 	void free_tiles()
@@ -183,6 +188,8 @@ public:
 	unsigned int get_tiles_width() const { return tiles_width; }
 
 	unsigned int get_tiles_height() const { return tiles_height; }
+
+	Trap* get_trap(unsigned int index) { return trap[index]; }
 
 	~Map()
 	{
