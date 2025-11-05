@@ -127,6 +127,7 @@ class Manager_map
 {
 	Map map;
 	Tiles tiles;
+	//Trap* trap;
 
 public:
 	Manager_map(GamesEngineeringBase::Window& canvas);

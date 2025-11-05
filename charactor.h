@@ -224,7 +224,7 @@ class Enemy_index
 {
 	unsigned int num = static_cast<unsigned int>(Enemy_type::MAX_TYPES);
 	Enemy_data enemy_templates[static_cast<unsigned int>(Enemy_type::MAX_TYPES)] = {
-	{"Slime",         Enemy_type::Slime,          5,  50, 1, 0},
+	{"Slime",         Enemy_type::Slime,          5,   50, 1, 0},
 	{"Bug",           Enemy_type::Bug,            7,  100, 2, 0},
 	{"FlySpookmoth",  Enemy_type::FlySpookmoth,  10,    0, 5, 2},
 	{"Pebblin",       Enemy_type::Pebblin,       15,   10, 5, 0}
@@ -473,4 +473,5 @@ public:
 
 	}
 };
+
 

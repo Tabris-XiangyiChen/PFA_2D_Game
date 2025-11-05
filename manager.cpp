@@ -116,6 +116,7 @@ Manager_map::Manager_map(GamesEngineeringBase::Window& canvas) : map(), tiles()
 {
 	tiles.tiles_init("map");
 	map.load_map("./Resource/map/tiles.txt");
+	//trap = new Trap[map.get_trap_num()];
 	//cam.camera_init(canvas, map.get_map_width() * map.get_tiles_width(),
 	//	map.get_map_height() * map.get_tiles_height());
 
@@ -523,9 +524,13 @@ Position Manager_bullet::set_forward(unsigned int bullet_index, Manager_enemy& e
 	return { mindx, mindy };
 }
 
+// this function is not very safe,it could be improve
 void Manager_bullet::keep_move_to_enemy(unsigned int bullet_index, Position pos, Manager_enemy& enemy, float time)
 {
 	//Position nearest = { 0, 0 };
+	if (bullet[bullet_index] == nullptr)
+		return;
+
 	unsigned int enemy_index = 0;
 	float min_dist = 1e9f;
 	float speed = 0;
@@ -542,11 +547,14 @@ void Manager_bullet::keep_move_to_enemy(unsigned int bullet_index, Position pos,
 				//nearest = { enemy[i]->get_hitbox_x(), enemy[i]->get_hitbox_y() };
 				enemy_index = i;
 				min_dist = dist;
-				//hitbox = bullet[bullet_index]->get_hitbox() + enemy[i]->get_hitbox();
+				hitbox = bullet[bullet_index]->get_hitbox() + enemy[i]->get_hitbox();
 			}
 		}
 	}
-	hitbox = bullet[bullet_index]->get_hitbox() + enemy[enemy_index]->get_hitbox();
+	//std::cout << "12" << std::endl;
+	//if (min_dist == 1e9f)
+	//hitbox = bullet[bullet_index]->get_hitbox() + hitbox;
+	//std::cout << "34" << std::endl;
 
 	if (min_dist > hitbox)
 	{

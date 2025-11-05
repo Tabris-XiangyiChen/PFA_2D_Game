@@ -42,6 +42,30 @@ void Tiles::draw(GamesEngineeringBase::Window& canvas, unsigned int id,
 	}
 }
 
+void Trap::trap_init(std::string name, Map& map, float x, float y)
+{
+	for (unsigned int i = 0; i < trap_status_num; i++)
+	{
+		//std::string filename;
+		//filename = "./Resource/" + trap_name + "/" + std::to_string(i) + ".png";
+		//tile[i].load(filename);
+	}
+	locate_x = x;
+	locate_y = y;
+	hitbox = map.get_tiles_width() / 2;
+	hitbox_center_x = locate_x + map.get_tiles_width() / 2;
+	hitbox_center_y = locate_y + map.get_tiles_height() / 2;
+ }
+
+
+
+
+
+
+
+
+
+
 bool Map::load_map(const char* filename)
 {
 	std::ifstream map_file(filename, std::ios::in);
@@ -89,6 +113,13 @@ bool Map::load_map(const char* filename)
 		std::cout << "The tiles height is : " << tiles_height << std::endl;
 
 	std::getline(map_file, line);
+	if (!(std::stringstream(line.substr(line.find(' ') + 1, '\n')) >> trap_num))
+	{
+		std::cerr << "Error: tiles_height invalid number: " << line << std::endl;
+		return false;
+	}
+	else
+		std::cout << "The trap num is : " << trap_num << std::endl;
 	std::getline(map_file, line);
 	this->allocate();
 
@@ -103,6 +134,8 @@ bool Map::load_map(const char* filename)
 			ss >> map_id;
 			ss >> comma;
 			at(w, h) = map_id;
+			if(map_id == 24)
+
 			std::cout << at(w, h) << " ";
 		}
 		std::cout << std::endl;
