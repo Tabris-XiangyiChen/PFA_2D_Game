@@ -103,7 +103,7 @@ bool Map::load_map(const char* filename)
 			ss >> map_id;
 			ss >> comma;
 			at(w, h) = map_id;
-			//std::cout << at(w, h) << " ";
+			std::cout << at(w, h) << " ";
 		}
 		std::cout << std::endl;
 	}

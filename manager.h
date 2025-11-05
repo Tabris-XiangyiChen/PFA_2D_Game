@@ -197,6 +197,8 @@ public:
 
 	float get_enemy_attack_time_elapsed(unsigned int index) { return enemy_attack_time_elapsed[index]; }
 
+	unsigned int get_enemy_current_num() { return current_size; }
+
 	//Get the unit's X location
 	inline float get_x(unsigned int index) { return enemy[index] -> get_x(); }
 
@@ -235,6 +237,7 @@ class Manager_bullet
 	Bullet* bullet[max_bullet_num];
 	Bullet_index e_index;
 	Move_Status move_status[max_bullet_num];
+	Position forward[max_bullet_num];
 	//float enemy_create_time_elapsed = 0;
 	unsigned int current_size = 0;
 
@@ -243,13 +246,17 @@ public:
 
 	Position create_out_camera_pos(Manager_map& map, Camera& cam, bool if_near_cam);
 
-	void move_to_nearest_enemy(unsigned int bullet_index, Position pos, Manager_enemy& enemy, float time);
+	Position set_forward(unsigned int bullet_index, Manager_enemy& enemy);
+
+	void keep_move_to_enemy(unsigned int bullet_index, Position pos, Manager_enemy& enemy, float time);
 
 	void move_to_nearest_hero(unsigned int bullet_index, Position pos, Manager_hero& hero, float time);
 
+	void forward_to_nearest_enemy(unsigned int bullet_index, Position pos, Manager_enemy& enemy, float time);
+
 	void create_bullet(std::string name, Bullet_type ty, Unit_Type fr);
 
-	void create_hero_bullet(Manager_hero& hero);
+	void create_hero_bullet(Manager_hero& hero, Manager_enemy& enemy);
 
 	void create_enemy_bullet(Manager_enemy& enemy);
 

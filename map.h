@@ -5,7 +5,7 @@
 #include <string>
 #include <iostream>
 
-const unsigned int tile_num = 24;
+const unsigned int tile_num = 25;
 class Tiles
 {
 	GamesEngineeringBase::Image tile[tile_num];

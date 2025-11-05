@@ -115,7 +115,7 @@ void Camera::update(Manager_hero& hero)
 Manager_map::Manager_map(GamesEngineeringBase::Window& canvas) : map(), tiles()
 {
 	tiles.tiles_init("map");
-	map.load_map("./Resource/map/tiles2.txt");
+	map.load_map("./Resource/map/tiles.txt");
 	//cam.camera_init(canvas, map.get_map_width() * map.get_tiles_width(),
 	//	map.get_map_height() * map.get_tiles_height());
 
@@ -400,6 +400,7 @@ Manager_bullet::Manager_bullet(GamesEngineeringBase::Window& canvas)
 	{
 		bullet[i] = nullptr;
 		move_status[i] = Move_Status::Front;
+		forward[i] = { 0, 0 };
 	}
 }
 
@@ -426,9 +427,10 @@ void Manager_bullet::delete_bullet(unsigned int i)
 	bullet[i] = nullptr;
 	current_size--;
 	move_status[i] = Move_Status::Front;
+	forward[i] = { 0, 0 };
 }
 
-void Manager_bullet::create_hero_bullet(Manager_hero& hero)
+void Manager_bullet::create_hero_bullet(Manager_hero& hero, Manager_enemy& enemy)
 {
 	if (hero.get_attack_elapsed() > hero.get_attack_cd())
 	{
@@ -441,6 +443,8 @@ void Manager_bullet::create_hero_bullet(Manager_hero& hero)
 				bullet[i]->load_image();
 				//std::cout << hero.get_hitbox_x() << hero.get_hitbox_y() << std::endl;
 				hero.zero_attack_elapsed();
+				Position fw = set_forward(i, enemy);
+				forward[i] = fw;
 				//std::cout << "create hero bullet" << std::endl;
 				//std::cout << "create bullet pos: " << bullet[i]->get_hitbox_x() << "," << bullet[i]->get_hitbox_y() << std::endl;
 				break;
@@ -480,33 +484,69 @@ void Manager_bullet::create_enemy_bullet(Manager_enemy& enemy)
 	}
 }
 
-void Manager_bullet::move_to_nearest_enemy(unsigned int bullet_index, Position pos, Manager_enemy& enemy, float time)
+Position Manager_bullet::set_forward(unsigned int bullet_index, Manager_enemy& enemy)
 {
-	Position nearest = { 0, 0 };
+	//Position speed = { 0, 0 };
+	//unsigned int enemy_index = 0;
+	float min_dist = 1e9f;
+	//float speed = 0;
+	float mindx = 0;
+	float mindy = 0;
+	//float hitbox = 0;
+	for (unsigned int i = 0; i < max_enemy_num; i++)
+	{
+		if (enemy[i] != nullptr)
+		{
+			float dx = enemy.get_hit_box_x(i) - bullet[bullet_index]->get_hitbox_x();
+			float dy = enemy.get_hit_box_y(i) - bullet[bullet_index]->get_hitbox_y();
+			float dist = sqrt(dx * dx + dy * dy);
+			if (dist < min_dist)
+			{
+				//nearest = { enemy[i]->get_hitbox_x(), enemy[i]->get_hitbox_y() };
+				//enemy_index = i;
+				mindx = dx;
+				mindy = dy;
+				min_dist = dist;
+				//hitbox = bullet[bullet_index]->get_hitbox() + enemy[i]->get_hitbox();
+			}
+		}
+	}
+
+	//float speed = max(static_cast<float>(bullet[bullet_index]->get_speed()) * time, 1.0f);
+
+	if (min_dist > 0.01f)
+	{
+		mindx /= min_dist;
+		mindy /= min_dist;
+	}
+
+	return { mindx, mindy };
+}
+
+void Manager_bullet::keep_move_to_enemy(unsigned int bullet_index, Position pos, Manager_enemy& enemy, float time)
+{
+	//Position nearest = { 0, 0 };
 	unsigned int enemy_index = 0;
 	float min_dist = 1e9f;
 	float speed = 0;
-	float mindx = 0;
-	float mindy = 0;
 	float hitbox = 0;
 	for (unsigned int i = 0; i < max_enemy_num; i++)
 	{
 		if (enemy[i] != nullptr)
 		{
-			float dx = enemy.get_hit_box_x(i) - pos.x;
-			float dy = enemy.get_hit_box_y(i) - pos.y;
+			float dx = enemy.get_hit_box_x(i) - bullet[bullet_index]->get_hitbox_x();
+			float dy = enemy.get_hit_box_y(i) - bullet[bullet_index]->get_hitbox_y();
 			float dist = sqrt(dx * dx + dy * dy);
 			if (dist < min_dist)
 			{
-				nearest = { enemy[i]->get_hitbox_x(), enemy[i]->get_hitbox_y() };
+				//nearest = { enemy[i]->get_hitbox_x(), enemy[i]->get_hitbox_y() };
 				enemy_index = i;
-				mindx = dx;
-				mindy = dy;
 				min_dist = dist;
-				hitbox = bullet[bullet_index]->get_hitbox() + enemy[i]->get_hitbox();
+				//hitbox = bullet[bullet_index]->get_hitbox() + enemy[i]->get_hitbox();
 			}
 		}
 	}
+	hitbox = bullet[bullet_index]->get_hitbox() + enemy[enemy_index]->get_hitbox();
 
 	if (min_dist > hitbox)
 	{
@@ -518,14 +558,8 @@ void Manager_bullet::move_to_nearest_enemy(unsigned int bullet_index, Position p
 		//else
 		//	move_status[i] = Move_Status::Right;
 
-		if (min_dist > 0.01f)
-		{
-			mindx /= min_dist;
-			mindy /= min_dist;
-		}
-
-		bullet[bullet_index]->update(pos.x + mindx * speed - static_cast<float>(bullet[bullet_index]->get_width() / 2),
-			pos.y + mindy * speed - static_cast<float>(bullet[bullet_index]->get_height() / 2));
+		bullet[bullet_index]->update(bullet[bullet_index]->get_hitbox_x() + forward[bullet_index].x * speed - static_cast<float>(bullet[bullet_index]->get_width() / 2),
+			bullet[bullet_index]->get_hitbox_y() + forward[bullet_index].y * speed - static_cast<float>(bullet[bullet_index]->get_height() / 2));
 	}
 	else
 	{
@@ -568,16 +602,72 @@ void Manager_bullet::move_to_nearest_hero(unsigned int bullet_index, Position po
 	}
 }
 
+void Manager_bullet::forward_to_nearest_enemy(unsigned int bullet_index, Position pos, Manager_enemy& enemy, float time)
+{
+	Position nearest = { 0, 0 };
+	unsigned int enemy_index = 0;
+	float min_dist = 1e9f;
+	float speed = 0;
+	float mindx = 0;
+	float mindy = 0;
+	float hitbox = 0;
+	for (unsigned int i = 0; i < max_enemy_num; i++)
+	{
+		if (enemy[i] != nullptr)
+		{
+			float dx = enemy.get_hit_box_x(i) - pos.x;
+			float dy = enemy.get_hit_box_y(i) - pos.y;
+			float dist = sqrt(dx * dx + dy * dy);
+			if (dist < min_dist)
+			{
+				nearest = { enemy[i]->get_hitbox_x(), enemy[i]->get_hitbox_y() };
+				enemy_index = i;
+				mindx = dx;
+				mindy = dy;
+				min_dist = dist;
+				hitbox = bullet[bullet_index]->get_hitbox() + enemy[i]->get_hitbox();
+			}
+		}
+	}
+
+	if (min_dist > hitbox )
+	{
+
+		speed = max(static_cast<float>(bullet[bullet_index]->get_speed()) * time, 1.0f);
+
+		//if (mindx <= 0)
+		//	move_status[i] = Move_Status::Left;
+		//else
+		//	move_status[i] = Move_Status::Right;
+
+		if (min_dist > 0.01f)
+		{
+			mindx /= min_dist;
+			mindy /= min_dist;
+		}
+
+		bullet[bullet_index]->update(pos.x + mindx * speed - static_cast<float>(bullet[bullet_index]->get_width() / 2),
+			pos.y + mindy * speed - static_cast<float>(bullet[bullet_index]->get_height() / 2));
+	}
+	else
+	{
+		enemy.suffer_attack(enemy_index, bullet[bullet_index]->get_attack());
+		delete_bullet(bullet_index);
+	}
+}
+
 void Manager_bullet::update(GamesEngineeringBase::Window& canvas, Manager_map& map, Manager_hero& hero,
 	Manager_enemy& enemy, Camera& cam, float time)
 {
-	this->create_hero_bullet(hero);
+	if (enemy.get_enemy_current_num() > 0)
+		this->create_hero_bullet(hero, enemy);
 	this->create_enemy_bullet(enemy);
 	
 	for (unsigned int i = 0; i < max_bullet_num; i++)
 	{
 		if (bullet[i] != nullptr)
 		{
+			//check if bullet is fly out the map
 			if (bullet[i]->get_hitbox_x() < 0 || bullet[i]->get_hitbox_x() > map.get_map_width_pix() ||
 				bullet[i]->get_hitbox_y() < 0 || bullet[i]->get_hitbox_y() > map.get_map_height_pix())
 			{
@@ -593,7 +683,7 @@ void Manager_bullet::update(GamesEngineeringBase::Window& canvas, Manager_map& m
 			{
 				Position pos = { bullet[i]->get_hitbox_x(), bullet[i]->get_hitbox_y() };
 				//std::cout << "bullet pos: " << pos.x << "," << pos.y << std::endl;
-				move_to_nearest_enemy(i, pos, enemy, time);
+				keep_move_to_enemy(i, pos, enemy, time);
 				continue;
 			}
 			if (bullet[i]->get_from() == Unit_Type::Enenmy)
