@@ -10,7 +10,7 @@ bool Charactor::load_image(std::string Heroname)
 			return false;
 	}
 
-	hitbox = static_cast<unsigned int>(image[0].width);
+	hitbox = static_cast<unsigned int>(image[0].width / 3);
 	hitbox_center_x = static_cast<float>(locate_x + static_cast<float>(image[0].width / 2));
 	hitbox_center_y = static_cast<float > (locate_y + static_cast<float>(image[0].height / 2));
 	return true;
@@ -78,7 +78,7 @@ bool Enemy::load_image()
 			return false;
 	}
 
-	hitbox = static_cast<unsigned int>(image[0].width) / 2;
+	hitbox = static_cast<unsigned int>(image[0].width / 3);
 	hitbox_center_x = locate_x + static_cast<float>(image[0].width / 2);
 	hitbox_center_y = locate_y + static_cast<float>(image[0].height / 2);
 	return true;

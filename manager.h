@@ -157,6 +157,7 @@ class Manager_enemy
 	float create_threshold = 3.f;
 
 	float enemy_attack_time_elapsed[max_enemy_num];
+	float enemy_attack_time_elapse = 0;
 
 	unsigned int slime_max_num = 10;
 	unsigned int slime_current_num = 0;
@@ -170,6 +171,19 @@ public:
 
 	void create_enemy(Manager_map& map,Camera& cam);
 
+	void zero_enemy_attack_time_elapsed(unsigned int index) { enemy_attack_time_elapsed[index] = 0; }
+
+	void update_enemy_attack_time_elapsed(float time) 
+	{ 
+		for (unsigned int i = 0; i < max_enemy_num; i++)
+		{
+			if (enemy[i] == nullptr)
+				continue;
+			if (enemy[i]->get_type() == Enemy_type::FlySpookmoth)
+				enemy_attack_time_elapsed[i] += time;
+		}
+	}
+
 	void delete_enemy(unsigned int i);
 
 	void suffer_attack(unsigned int index, unsigned int attack)
@@ -180,6 +194,8 @@ public:
 	void update(GamesEngineeringBase::Window& canvas, Manager_map& map, Manager_hero& hero, Camera& cam, float time);
 
 	void draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam);
+
+	float get_enemy_attack_time_elapsed(unsigned int index) { return enemy_attack_time_elapsed[index]; }
 
 	//Get the unit's X location
 	inline float get_x(unsigned int index) { return enemy[index] -> get_x(); }
@@ -227,11 +243,15 @@ public:
 
 	Position create_out_camera_pos(Manager_map& map, Camera& cam, bool if_near_cam);
 
-	void move_to_nearest_enemy(unsigned int i, Position pos, Manager_enemy& enemy, float time);
+	void move_to_nearest_enemy(unsigned int bullet_index, Position pos, Manager_enemy& enemy, float time);
+
+	void move_to_nearest_hero(unsigned int bullet_index, Position pos, Manager_hero& hero, float time);
 
 	void create_bullet(std::string name, Bullet_type ty, Unit_Type fr);
 
 	void create_hero_bullet(Manager_hero& hero);
+
+	void create_enemy_bullet(Manager_enemy& enemy);
 
 	void delete_bullet(unsigned int i);
 

@@ -115,10 +115,10 @@ private:
 public:
 	Charactor() :
 		Unit(480.f, 532.f, Unit_Type::Hero),
-		health(10),
+		health(50),
 		speed(250),
 		attack(5),
-		attack_cd(2.f),
+		attack_cd(0.5f),
 		invincible_time(1.f),
 		aoe_cd(10.f),
 		m_status(Move_Status::Front) {}
@@ -128,9 +128,9 @@ public:
 		health(health),
 		speed(speed),
 		attack(attack),
-		attack_cd(2.f),
+		attack_cd(0.5f),
 		aoe_cd(10.f),
-		invincible_time(2.f),
+		invincible_time(1.f),
 		m_status(Move_Status::Front) {
 	}
 
@@ -217,16 +217,17 @@ struct Enemy_data {
 	int health;
 	unsigned int speed;
 	unsigned int attack;
+	unsigned int attack_cd;
 };
 
 class Enemy_index
 {
 	unsigned int num = static_cast<unsigned int>(Enemy_type::MAX_TYPES);
 	Enemy_data enemy_templates[static_cast<unsigned int>(Enemy_type::MAX_TYPES)] = {
-	{"Slime",         Enemy_type::Slime,          5,  100, 1},
-	{"Bug",           Enemy_type::Bug,            7,  150, 2},
-	{"FlySpookmoth",  Enemy_type::FlySpookmoth,  10,  100, 5},
-	{"Pebblin",       Enemy_type::Pebblin,       15,   50, 5}
+	{"Slime",         Enemy_type::Slime,          5,  50, 1, 0},
+	{"Bug",           Enemy_type::Bug,            7,  100, 2, 0},
+	{"FlySpookmoth",  Enemy_type::FlySpookmoth,  10,    0, 5, 2},
+	{"Pebblin",       Enemy_type::Pebblin,       15,   10, 5, 0}
 	};
 	//std::string arr[enemy_type_n] = { Slime, Bug, FlySpookmoth, Pebblin};
 public:
@@ -261,6 +262,7 @@ class Enemy : public Unit
 	int health; //enemy's health,storage the current health num
 	unsigned int speed;
 	unsigned int attack;
+	unsigned int attack_cd = 0;
 	Move_Status m_status;
 
 public:
@@ -283,13 +285,15 @@ public:
 		m_status(Move_Status::Front) {
 	}
 
-	Enemy(std::string name, Enemy_type ty,float x, float y, unsigned int health, unsigned int speed, unsigned int attack) :
+	Enemy(std::string name, Enemy_type ty, float x, float y, unsigned int health,
+		unsigned int speed, unsigned int attack, unsigned int attack_cd) :
 		enemy_name(name),
 		type(ty),
 		Unit(x, y, Unit_Type::Enenmy),
 		health(health),
 		speed(speed),
 		attack(attack),
+		attack_cd(attack_cd),
 		m_status(Move_Status::Front) {
 	}
 	bool load_image();
@@ -315,6 +319,10 @@ public:
 	inline std::string get_name() { return enemy_name; }
 
 	inline Enemy_type get_type() { return type; }
+
+	unsigned int get_attack() { return attack; }
+
+	inline unsigned int get_attack_cd() { return attack_cd; }
 
 	//Get the inmage's width
 	inline unsigned int get_width() { return image[0].width; }
@@ -390,7 +398,7 @@ class Bullet : public Unit
 	Bullet_type type;
 	Unit_Type from;
 	GamesEngineeringBase::Image image[bullet_move_status_num];
-	//int health;
+	float health = 10;
 	unsigned int speed;
 	unsigned int attack;
 	Move_Status m_status = Move_Status::Front;
@@ -416,16 +424,15 @@ public:
 		speed(speed),
 		attack(0) {}
 
-	Bullet(std::string name, Bullet_type ty, Unit_Type fr, float x, float y, unsigned int speed, unsigned int attack) :
+	Bullet(std::string name, Bullet_type ty, Unit_Type fr, float x, float y,
+		unsigned int speed, unsigned int attack) :
 		bullet_name(name),
 		type(ty),
 		from(fr),
 		Unit(x, y, Unit_Type::Bullet),
 		//health(health),
 		speed(speed),
-		attack(attack) {
-		std::cout << locate_x << "," << locate_y << std::endl;
-	}
+		attack(attack){}
 
 	bool load_image();
 
@@ -435,7 +442,11 @@ public:
 
 	void update(float x, float y);
 
+	void sub_health(float x) { health -= x; };
+
 	GamesEngineeringBase::Image& operator[](unsigned int index) { return image[index]; }
+
+	inline unsigned int get_health() { return health; }
 
 	inline std::string get_name() { return bullet_name; }
 
