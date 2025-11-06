@@ -20,7 +20,7 @@ Position static rebound(Position from, Position to, float hitbox_len)
 	float overlap = (hitbox_len - dist);
 	if (overlap <= 0.0f)
 		return from;
-	float push = overlap * 0.1f;
+	float push = overlap * 0.5f;
 	return { from.x + nx * push , from.y + ny * push };
 }
 
@@ -70,6 +70,10 @@ public:
 	float get_attack_cd() { return Hero.get_attack_cd(); }
 
 	float get_aoe_cd() { return Hero.get_aoe_cd(); }
+
+	float get_aoe_range() { return Hero.get_aoe_range(); }
+
+	unsigned int get_aoe_num() { return Hero.get_aoe_num(); }
 
 	float get_invincible_time() { return Hero.get_invincible_time(); }
 
@@ -266,11 +270,12 @@ const unsigned int max_bullet_num = 100;
 class Manager_bullet
 {
 	Bullet* bullet[max_bullet_num];
-	Bullet_index e_index;
+	Bullet_index b_index;
 	Move_Status move_status[max_bullet_num];
 	Position forward[max_bullet_num];
 	//float enemy_create_time_elapsed = 0;
 	unsigned int current_size = 0;
+	float aoe_Light_render_start = 0;
 
 public:
 	Manager_bullet(GamesEngineeringBase::Window& canvas);
@@ -279,15 +284,19 @@ public:
 
 	Position set_forward(unsigned int bullet_index, Manager_enemy& enemy);
 
-	void keep_move_to_enemy(unsigned int bullet_index, Position pos, Manager_enemy& enemy, float time);
+	void keep_move_to_enemy(unsigned int bullet_index, Manager_enemy& enemy, float time);
 
-	void move_to_nearest_hero(unsigned int bullet_index, Position pos, Manager_hero& hero, float time);
+	void move_to_nearest_hero(unsigned int bullet_index, Manager_hero& hero, float time);
 
-	void forward_to_nearest_enemy(unsigned int bullet_index, Position pos, Manager_enemy& enemy, float time);
+	void move_to_nearest_enemy(unsigned int bullet_index, Manager_enemy& enemy, float time);
 
 	void create_bullet(std::string name, Bullet_type ty, Unit_Type fr);
 
 	void create_hero_bullet(Manager_hero& hero, Manager_enemy& enemy);
+
+	void create_hero_aoe_bullet(Manager_hero& hero, Manager_enemy& enemy);
+
+	void check_delete_Light(unsigned int bullet_index, Manager_enemy& enemy, float time);
 
 	void create_enemy_bullet(Manager_enemy& enemy);
 

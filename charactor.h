@@ -24,6 +24,80 @@ struct Position
 	float y;
 };
 
+#include <iostream>
+#include <stdexcept>
+
+template<typename T>
+class My_Stack {
+private:
+	struct Node {
+		T data;
+		Node* next;
+		Node(const T& value) : data(value), next(nullptr){}
+	};
+
+	Node* head;
+	unsigned int  stack_size;
+
+public:
+	My_Stack() :
+		head(nullptr), 
+		stack_size(0) {}
+
+	bool empty() const { return stack_size == 0; }
+	unsigned int get_size() const { return stack_size; }
+
+	T get_head() { return head->data; }
+
+	bool find(T value) 
+	{
+		Node* curr = nullptr;
+		if (head == nullptr)
+			return false;
+
+		curr = head;
+		
+		while(curr !=nullptr)
+		{
+			if (curr->data == value)
+				return true;
+			else
+				curr = curr->next;
+		}
+	}
+
+	void push(const T& value) {
+		Node* new_node = new Node(value);
+		if (empty()) 
+			head = new_node;
+		else {
+			new_node->next = head;
+			head = new_node;
+		}
+		stack_size++;
+	}
+
+	void pop() {
+
+		Node* temp = head;
+		head = head->next;
+		delete temp;
+		stack_size--;
+	}
+
+	void clear() {
+		while (!empty()) {
+			pop();
+		}
+	}
+
+	~My_Stack() {
+		clear();
+	}
+};
+
+
+
 //The class of every unit, include the main charactor and enemies
 class Unit
 {
@@ -109,6 +183,8 @@ private:
 	unsigned int attack;
 	float attack_cd;
 	float aoe_cd;
+	float aoe_range = 200.f;
+	unsigned int aoe_num = 5;
 	float invincible_time;
 	Move_Status m_status;
 
@@ -158,6 +234,10 @@ public:
 
 	float get_aoe_cd() { return aoe_cd; }
 
+	float get_aoe_range() { return aoe_range; }
+
+	unsigned int get_aoe_num() { return aoe_num; }
+
 	float get_invincible_time() { return invincible_time; }
 
 	bool load_image(std::string Heroname);
@@ -173,28 +253,16 @@ public:
 	GamesEngineeringBase::Image& operator[](unsigned int index) { return image[index]; }
 
 	//Get the inmage's width
-	inline unsigned int get_width()
-	{
-		return image[0].width;
-	}
+	inline unsigned int get_width() { return image[0].width; }
 
 	//Get the image's height
-	inline unsigned int get_height()
-	{
-		return image[0].height;
-	}
+	inline unsigned int get_height() {return image[0].height; }
 
 	//Get the charactor's speed
-	inline unsigned int get_speed()
-	{
-		return speed;
-	}
+	inline unsigned int get_speed() { return speed; }
 
 	//Get the charactor's health
-	int get_health()
-	{
-		return health;
-	}
+	int get_health() { return health; }
 
 	~Charactor() 
 	{
@@ -364,8 +432,7 @@ class Bullet_index
 	Bullet_data bullet_templates[static_cast<unsigned int>(Bullet_type::MAX_TYPES)] = {
 	{"Blue",         Bullet_type::Blue,         5, 1},
 	{"Red",           Bullet_type::Red,         7, 2},
-	{"Light",       Bullet_type::Light,        10, 5},
-	//{"Pebblin",       Bullet_type::Pebblin,       15,   50, 5}
+	{"Light",	    Bullet_type::Light,        10, 20},
 	};
 	//std::string arr[enemy_type_n] = { Slime, Bug, FlySpookmoth, Pebblin};
 public:
@@ -387,13 +454,14 @@ public:
 	}
 
 	Bullet_data& operator[] (unsigned int index) { return bullet_templates[index]; }
-	Bullet_data& operator[] (Enemy_type name) { return bullet_templates[static_cast<int>(name)]; }
+	Bullet_data& operator[] (Bullet_type name) { return bullet_templates[static_cast<int>(name)]; }
 };
 
 
 const unsigned int bullet_move_status_num = 1;
 class Bullet : public Unit
 {
+	Bullet_index b_index;
 	std::string bullet_name;
 	Bullet_type type;
 	Unit_Type from;
@@ -415,14 +483,15 @@ public:
 		//m_status(Move_Status::Front) 
 	{}
 
-	Bullet(std::string name, Bullet_type ty, Unit_Type fr, unsigned int speed) :
+	Bullet(std::string name, Bullet_type ty, Unit_Type fr, float x, float y) :
 		bullet_name(name),
 		type(ty),
 		from(fr),
-		Unit(600, 600, Unit_Type::Bullet),
-		//health(health),
-		speed(speed),
-		attack(0) {}
+		Unit(x, y, Unit_Type::Bullet)
+	{
+		speed = b_index[ty].speed;
+		attack = b_index[ty].attack;
+	}
 
 	Bullet(std::string name, Bullet_type ty, Unit_Type fr, float x, float y,
 		unsigned int speed, unsigned int attack) :

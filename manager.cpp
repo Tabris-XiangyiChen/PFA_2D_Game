@@ -1,4 +1,4 @@
-#include "manager.h"
+﻿#include "manager.h"
 
 void Manager_hero::update(GamesEngineeringBase::Window& canvas, Manager_map& map, float time) 
 {
@@ -383,13 +383,6 @@ void Manager_enemy::update(GamesEngineeringBase::Window& canvas, Manager_map& ma
 		float mid_dist = static_cast<float>(hero.get_hitbox() + enemy[i]->get_hitbox());
 
 		if (dist_enemy_to_hero < mid_dist && dist_enemy_to_hero > 0.1f && hero.get_invincible_time_elapsed() > hero.get_invincible_time()) {
-			//float nx = dx3 / dist_enemy_to_hero;
-			//float ny = dy3 / dist_enemy_to_hero;
-			//float overlap = (mid_dist - dist_enemy_to_hero);
-			//float push = overlap * 0.1f;
-			//newX += nx * push;
-			//newY += ny * push;
-			//Here is quite hard to understand,enemy[i]->get_name() to get the enemy's name
 			hero.suffer_attack(e_index[enemy[i]->get_type()].attack);
 			hero.zero_invincible_time_elapsed();
 		}
@@ -479,6 +472,213 @@ void Manager_bullet::create_hero_bullet(Manager_hero& hero, Manager_enemy& enemy
 	}
 }
 
+/*void Manager_bullet::create_hero_aoe_bullet_(Manager_hero& hero, Manager_enemy& enemy)
+{
+	if (hero.get_aoe_elapsed() > hero.get_aoe_cd())
+	{
+		unsigned int current_aoe_bullet = 0;
+		My_Stack<unsigned int> max_health_enemy_index;
+		float max_health = 0;
+		unsigned int max_health_enemy = NULL;
+		for (unsigned int i = 0; i < hero.get_aoe_num(); i++)
+		{
+			for (unsigned int j = 0; j < max_enemy_num; j++)
+			{
+				if (enemy[j] != nullptr)
+				{
+					float dx = enemy.get_hit_box_x(j) - hero.get_hitbox_x();
+					float dy = enemy.get_hit_box_y(j) - hero.get_hitbox_y();
+					float dist = sqrt(dx * dx + dy * dy);
+
+					if (dist < hero.get_aoe_range() && current_aoe_bullet < hero.get_aoe_num())
+					{
+						if (enemy[j]->get_health() > max_health && !max_health_enemy_index.find(j))
+						{
+							max_health = enemy[j]->get_health();
+						}
+					}
+				}
+
+			}
+			if (max_health_enemy != NULL)
+			{
+				max_health_enemy_index.push(max_health_enemy);
+				current_aoe_bullet++;
+			}
+			max_health = 0;
+		}
+
+		while(max_health_enemy_index.get_size() != 0)
+		{
+			for (unsigned int i = 0; i < max_bullet_num; i++)
+			{
+				if (bullet[i] == nullptr)
+				{
+					bullet[i] = new Bullet("Light", Bullet_type::Light, Unit_Type::Hero,
+						enemy[max_health_enemy_index.get_head()]->get_hitbox_x(),
+						enemy[max_health_enemy_index.get_head()]->get_hitbox_y());
+					max_health_enemy_index.pop();
+					current_aoe_bullet--;
+					bullet[i]->load_image();
+					//std::cout << hero.get_hitbox_x() << hero.get_hitbox_y() << std::endl;
+					//std::cout << "create hero bullet" << std::endl;
+					//std::cout << "create bullet pos: " << bullet[i]->get_hitbox_x() << "," << bullet[i]->get_hitbox_y() << std::endl;d
+				}
+				break;
+			}
+		}
+		hero.zero_aoe_elapsed();
+		std::cout << "creat aoe" << std::endl;
+	}
+}*/
+
+void Manager_bullet::create_hero_aoe_bullet(Manager_hero& hero, Manager_enemy& enemy)
+{
+	std::cout << "[AOE] === create_hero_aoe_bullet() called ===" << std::endl;
+
+	if (hero.get_aoe_elapsed() > hero.get_aoe_cd())
+	{
+		std::cout << "[AOE] Cooldown OK. Starting AOE bullet creation..." << std::endl;
+
+		unsigned int current_aoe_bullet = 0;
+		My_Stack<unsigned int> max_health_enemy_index;
+		float max_health = 0.f;
+		unsigned int max_health_enemy = UINT_MAX;
+
+		unsigned int aoe_num = hero.get_aoe_num();
+		std::cout << "[AOE] Target AOE bullet num: " << aoe_num
+			<< ", Range = " << hero.get_aoe_range() << std::endl;
+
+		// === find biggest health enemy index ===
+		for (unsigned int i = 0; i < aoe_num; i++)
+		{
+			max_health = 0.f;
+			max_health_enemy = UINT_MAX;
+
+			for (unsigned int j = 0; j < max_enemy_num; j++)
+			{
+				if (enemy[j] != nullptr)
+				{
+					float dx = enemy.get_hit_box_x(j) - hero.get_hitbox_x();
+					float dy = enemy.get_hit_box_y(j) - hero.get_hitbox_y();
+					float dist = sqrt(dx * dx + dy * dy);
+
+					if (dist < hero.get_aoe_range() && current_aoe_bullet < aoe_num)
+					{
+						float hp = enemy[j]->get_health();
+						if (hp > max_health && !max_health_enemy_index.find(j))
+						{
+							max_health = hp;
+							max_health_enemy = j;
+						}
+					}
+				}
+			}
+
+			if (max_health_enemy != UINT_MAX)
+			{
+				max_health_enemy_index.push(max_health_enemy);
+				current_aoe_bullet++;
+				std::cout << "[AOE] Selected enemy #" << max_health_enemy
+					<< " with health=" << max_health
+					<< " | total selected=" << current_aoe_bullet << std::endl;
+			}
+			else
+			{
+				std::cout << "[AOE] No valid enemy found in range for bullet #" << i << std::endl;
+			}
+		}
+
+		// === create bullet ===
+		std::cout << "[AOE] Begin creating bullets, total targets = "
+			<< max_health_enemy_index.get_size() << std::endl;
+
+		while (max_health_enemy_index.get_size() != 0)
+		{
+			unsigned int target_index = max_health_enemy_index.get_head();
+			max_health_enemy_index.pop();
+
+			bool bullet_created = false;
+			for (unsigned int i = 0; i < max_bullet_num; i++)
+			{
+				if (bullet[i] == nullptr)
+				{
+					bullet[i] = new Bullet(
+						"Light",
+						Bullet_type::Light,
+						Unit_Type::Hero,
+						enemy[target_index]->get_hitbox_x(),
+						enemy[target_index]->get_hitbox_y());
+
+					bullet[i]->load_image();
+					current_aoe_bullet--;
+
+					std::cout << "[AOE] Created bullet at enemy #" << target_index
+						<< " pos=(" << enemy[target_index]->get_hitbox_x()
+						<< "," << enemy[target_index]->get_hitbox_y() << ")"
+						<< " | Remaining bullets=" << current_aoe_bullet << std::endl;
+
+					bullet_created = true;
+					break;
+				}
+			}
+
+			if (!bullet_created)
+				std::cout << "[AOE] WARNING: bullet pool full, could not create bullet!" << std::endl;
+		}
+
+		hero.zero_aoe_elapsed();
+		std::cout << "[AOE] === AOE creation complete ===" << std::endl;
+	}
+	else
+	{
+		std::cout << "[AOE] Cooldown not ready. Elapsed=" << hero.get_aoe_elapsed()
+			<< " / CD=" << hero.get_aoe_cd() << std::endl;
+	}
+}
+
+void Manager_bullet::check_delete_Light(unsigned int bullet_index, Manager_enemy& enemy, float time)
+{
+	Position nearest = { 0, 0 };
+	unsigned int enemy_index = 0;
+	float min_dist = 1e9f;
+	float speed = 0;
+	float mindx = 0;
+	float mindy = 0;
+	float hitbox = 0;
+	for (unsigned int i = 0; i < max_enemy_num; i++)
+	{
+		if (enemy[i] != nullptr)
+		{
+			float dx = enemy.get_hit_box_x(i) - bullet[bullet_index]->get_hitbox_x();
+			float dy = enemy.get_hit_box_y(i) - bullet[bullet_index]->get_hitbox_y();
+			float dist = sqrt(dx * dx + dy * dy);
+			if (dist < min_dist)
+			{
+				nearest = { enemy[i]->get_hitbox_x(), enemy[i]->get_hitbox_y() };
+				enemy_index = i;
+				mindx = dx;
+				mindy = dy;
+				min_dist = dist;
+				hitbox = bullet[bullet_index]->get_hitbox() + enemy[i]->get_hitbox();
+			}
+		}
+	}
+
+	if (min_dist > hitbox)
+	{
+		if (aoe_Light_render_start > 0.5f)
+			delete_bullet(bullet_index);
+	}
+	else
+	{
+		enemy.suffer_attack(enemy_index, bullet[bullet_index]->get_attack());
+		if (aoe_Light_render_start > 0.5f)
+			delete_bullet(bullet_index);
+	}
+	aoe_Light_render_start += time;
+}
+
 void Manager_bullet::create_enemy_bullet(Manager_enemy& enemy)
 {
 
@@ -550,7 +750,7 @@ Position Manager_bullet::set_forward(unsigned int bullet_index, Manager_enemy& e
 }
 
 // this function is not very safe,it could be improve
-void Manager_bullet::keep_move_to_enemy(unsigned int bullet_index, Position pos, Manager_enemy& enemy, float time)
+void Manager_bullet::keep_move_to_enemy(unsigned int bullet_index, Manager_enemy& enemy, float time)
 {
 	//Position nearest = { 0, 0 };
 	if (bullet[bullet_index] == nullptr)
@@ -603,10 +803,10 @@ void Manager_bullet::keep_move_to_enemy(unsigned int bullet_index, Position pos,
 	//return { pos.x + mindx * speed, pos.y + mindy * speed };
 }
 
-void Manager_bullet::move_to_nearest_hero(unsigned int bullet_index, Position pos, Manager_hero& hero, float time)
+void Manager_bullet::move_to_nearest_hero(unsigned int bullet_index, Manager_hero& hero, float time)
 {
-	float dx = hero.get_hitbox_x() - pos.x;
-	float dy = hero.get_hitbox_y() - pos.y;
+	float dx = hero.get_hitbox_x() - bullet[bullet_index]->get_hitbox_x();
+	float dy = hero.get_hitbox_y() - bullet[bullet_index]->get_hitbox_y();
 	float dist = sqrt(dx * dx + dy * dy);
 
 	if (dist > hero.get_hitbox())
@@ -625,8 +825,8 @@ void Manager_bullet::move_to_nearest_hero(unsigned int bullet_index, Position po
 			dy /= dist;
 		}
 
-		bullet[bullet_index]->update(pos.x + dx * speed - static_cast<float>(bullet[bullet_index]->get_width() / 2),
-			pos.y + dy * speed - static_cast<float>(bullet[bullet_index]->get_height() / 2));
+		bullet[bullet_index]->update(bullet[bullet_index]->get_hitbox_x() + dx * speed - static_cast<float>(bullet[bullet_index]->get_width() / 2),
+			bullet[bullet_index]->get_hitbox_y() + dy * speed - static_cast<float>(bullet[bullet_index]->get_height() / 2));
 	}
 	else
 	{
@@ -635,7 +835,7 @@ void Manager_bullet::move_to_nearest_hero(unsigned int bullet_index, Position po
 	}
 }
 
-void Manager_bullet::forward_to_nearest_enemy(unsigned int bullet_index, Position pos, Manager_enemy& enemy, float time)
+void Manager_bullet::move_to_nearest_enemy(unsigned int bullet_index, Manager_enemy& enemy, float time)
 {
 	Position nearest = { 0, 0 };
 	unsigned int enemy_index = 0;
@@ -648,8 +848,8 @@ void Manager_bullet::forward_to_nearest_enemy(unsigned int bullet_index, Positio
 	{
 		if (enemy[i] != nullptr)
 		{
-			float dx = enemy.get_hit_box_x(i) - pos.x;
-			float dy = enemy.get_hit_box_y(i) - pos.y;
+			float dx = enemy.get_hit_box_x(i) - bullet[bullet_index]->get_hitbox_x();
+			float dy = enemy.get_hit_box_y(i) - bullet[bullet_index]->get_hitbox_y();
 			float dist = sqrt(dx * dx + dy * dy);
 			if (dist < min_dist)
 			{
@@ -679,8 +879,8 @@ void Manager_bullet::forward_to_nearest_enemy(unsigned int bullet_index, Positio
 			mindy /= min_dist;
 		}
 
-		bullet[bullet_index]->update(pos.x + mindx * speed - static_cast<float>(bullet[bullet_index]->get_width() / 2),
-			pos.y + mindy * speed - static_cast<float>(bullet[bullet_index]->get_height() / 2));
+		bullet[bullet_index]->update(bullet[bullet_index]->get_hitbox_x() + mindx * speed - static_cast<float>(bullet[bullet_index]->get_width() / 2),
+			bullet[bullet_index]->get_hitbox_y() + mindy * speed - static_cast<float>(bullet[bullet_index]->get_height() / 2));
 	}
 	else
 	{
@@ -695,6 +895,7 @@ void Manager_bullet::update(GamesEngineeringBase::Window& canvas, Manager_map& m
 	if (enemy.get_enemy_current_num() > 0)
 		this->create_hero_bullet(hero, enemy);
 	this->create_enemy_bullet(enemy);
+
 	
 	for (unsigned int i = 0; i < max_bullet_num; i++)
 	{
@@ -712,21 +913,29 @@ void Manager_bullet::update(GamesEngineeringBase::Window& canvas, Manager_map& m
 				delete_bullet(i);
 				continue;
 			}
-			if (bullet[i]->get_from() == Unit_Type::Hero)
+			if (bullet[i]->get_from() == Unit_Type::Hero && bullet[i]->get_type() == Bullet_type::Blue)
 			{
-				Position pos = { bullet[i]->get_hitbox_x(), bullet[i]->get_hitbox_y() };
-				//std::cout << "bullet pos: " << pos.x << "," << pos.y << std::endl;
-				keep_move_to_enemy(i, pos, enemy, time);
+				keep_move_to_enemy(i, enemy, time);
 				continue;
 			}
 			if (bullet[i]->get_from() == Unit_Type::Enenmy)
 			{
 				bullet[i]->sub_health(time);
-				Position pos = { bullet[i]->get_hitbox_x(), bullet[i]->get_hitbox_y() };
-				move_to_nearest_hero(i, pos, hero, time);
+				move_to_nearest_hero(i, hero, time);
+				continue;
+			}
+			if (bullet[i]->get_from() == Unit_Type::Hero && bullet[i]->get_type() == Bullet_type::Light)
+			{
+				check_delete_Light(i, enemy, time);
 				continue;
 			}
 		}
+	}
+
+	if (canvas.keyPressed('J'))
+	{
+		create_hero_aoe_bullet(hero, enemy);
+		std::cout << "AOE!" << std::endl;
 	}
 }
 
