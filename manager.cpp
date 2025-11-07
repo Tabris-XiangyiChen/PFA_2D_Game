@@ -1,37 +1,56 @@
 ﻿#include "manager.h"
 
+
+Manager_hero::Manager_hero(GamesEngineeringBase::Window& canvas) : Hero(nullptr), move_status(Move_Status::Front), attack_elapsed(0), aoe_elapsed(0)
+{
+	Hero = new Charactor();
+	Hero->load_image("Wizard");
+}
+
+void Manager_hero::init()
+{
+	delete Hero;
+	Hero == nullptr;
+	Hero = new Charactor();
+	Hero->load_image("Wizard");
+	move_status = Move_Status::Front;
+	invincible_time_elapsed = 0;
+	attack_elapsed = 0; 
+	aoe_elapsed = 0;
+}
+
 void Manager_hero::update(GamesEngineeringBase::Window& canvas, Manager_map& map, float time) 
 {
-	if(!Hero.check_if_dead())
+	if(!Hero->check_if_dead())
 	{
 		update_cd(time);
 		Position pos = { 0, 0 };
-		float new_x = Hero.get_x();
-		float new_y = Hero.get_y();
+		float new_x = Hero->get_x();
+		float new_y = Hero->get_y();
 		//int speed = static_cast<int>(max(static_cast<float>(Hero.get_speed() * 50) * time, 1.0f));
-		float speed = max(static_cast<float>(Hero.get_speed()) * time, 1.0f);
+		float speed = max(static_cast<float>(Hero->get_speed()) * time, 1.0f);
 
 		//std::cout << "speed is " << speed << "the time is " << time << std::endl;
 
 		for (unsigned int i = 0; i < map.get_trap_num(); i++)
 		{
 			
-			float dx = Hero.get_hitbox_x() - map.get_trap_position(i).x;
-			float dy = Hero.get_hitbox_y() - map.get_trap_position(i).y;
+			float dx = Hero->get_hitbox_x() - map.get_trap_position(i).x;
+			float dy = Hero->get_hitbox_y() - map.get_trap_position(i).y;
 			float dist = sqrt(dx * dx + dy * dy);
-			float hitbox_dist = static_cast<float>(Hero.get_hitbox() + map.get_trap_hitbox(i));
+			float hitbox_dist = static_cast<float>(Hero->get_hitbox() + map.get_trap_hitbox(i));
 			if (dist < hitbox_dist)
 			{
-				if (invincible_time_elapsed > Hero.get_invincible_time())
+				if (invincible_time_elapsed > Hero->get_invincible_time())
 				{
-					Hero.suffer_attack(map.get_trap_attack(i));
+					Hero->suffer_attack(map.get_trap_attack(i));
 					zero_invincible_time_elapsed();
 				}
-				pos = rebound({ Hero.get_hitbox_x(), Hero.get_hitbox_y() }, map.get_trap_position(i), hitbox_dist);
-				new_x = pos.x - static_cast<float>(Hero.get_width() / 2);
-				new_y = pos.y - static_cast<float>(Hero.get_height() / 2);
+				pos = rebound({ Hero->get_hitbox_x(), Hero->get_hitbox_y() }, map.get_trap_position(i), hitbox_dist);
+				new_x = pos.x - static_cast<float>(Hero->get_width() / 2);
+				new_y = pos.y - static_cast<float>(Hero->get_height() / 2);
 				std::cout << " touch the trap" << std::endl;
-				Hero.update(canvas, new_x, new_y, move_status);
+				Hero->update(canvas, new_x, new_y, move_status);
 				//return;
 			}
 		}
@@ -59,17 +78,17 @@ void Manager_hero::update(GamesEngineeringBase::Window& canvas, Manager_map& map
 			new_x += speed;
 		}
 		new_x = max(0, new_x);
-		new_x = min(static_cast<int>(map.get_map_width_pix()) - static_cast<int>(Hero.get_width()), new_x);
+		new_x = min(static_cast<int>(map.get_map_width_pix()) - static_cast<int>(Hero->get_width()), new_x);
 		new_y = max(0, new_y);
-		new_y = min(static_cast<int>(map.get_map_height_pix()) - static_cast<int>(Hero.get_height()), new_y);
+		new_y = min(static_cast<int>(map.get_map_height_pix()) - static_cast<int>(Hero->get_height()), new_y);
 
-		Hero.update(canvas, new_x, new_y, move_status);
+		Hero->update(canvas, new_x, new_y, move_status);
 		return;
 	}
 	else 
 	{
 		move_status = Move_Status::Dead;
-		Hero.update(move_status);
+		Hero->update(move_status);
 	}
 
 }
@@ -78,10 +97,77 @@ void Manager_hero::draw(GamesEngineeringBase::Window& canvas, Manager_map& map, 
 {
 	if (cam.get_is_at_boundry())
 	{
-		Hero.draw(canvas, static_cast<int>(cam.mapx_to_camerax(Hero.get_x())), static_cast<int>(cam.mapy_to_cameray(Hero.get_y())));
+		Hero->draw(canvas, static_cast<int>(cam.mapx_to_camerax(Hero->get_x())), static_cast<int>(cam.mapy_to_cameray(Hero->get_y())));
 	}
 	else
-		Hero.draw_incenter(canvas);
+		Hero->draw_incenter(canvas);
+}
+
+void Manager_hero::save_hero_state(const std::string& filename)
+{
+	std::ofstream file(filename, std::ios::out | std::ios::trunc);
+	if (!file.is_open()) {
+		std::cerr << "[Error] Cannot open save file: " << filename << std::endl;
+		return;
+	}
+
+	file << "Hero Status" << std::endl
+		<< Hero->get_x() << " "
+		<< Hero->get_y() << " "
+		<< Hero->get_hitbox() << " "
+		<< Hero->get_hitbox_x() << " "
+		<< Hero->get_hitbox_y() << " "
+		<< Hero->get_health() << " "
+		<< Hero->get_attack() << " "
+		<< Hero->get_attack_cd() << " "
+		<< Hero->get_aoe_cd() << " "
+		<< Hero->get_aoe_range() << " "
+		<< Hero->get_aoe_num() << " "
+		<< Hero->get_invincible_time() << " "
+		<< invincible_time_elapsed << " "
+		<< attack_elapsed << " "
+		<< aoe_elapsed << " "
+		<< static_cast<int>(move_status)
+		<< std::endl;
+
+	file.close();
+	std::cout << "[Save] Hero state saved to " << filename << std::endl;
+}
+
+void Manager_hero::load_hero_state(std::string filename)
+{
+	std::ifstream file(filename, std::ios::in);
+	if (!file.is_open()) {
+		std::cerr << "[Error] Cannot open load file: " << filename << std::endl;
+		return;
+	}
+
+	float x, y, hb, hb_x, hb_y;
+	int health;
+	unsigned int attack, aoe_num;
+	float attack_cd, aoe_cd, aoe_range, invincible_time;
+	float invincible_elapsed, atk_elapsed, aoe_elapsed;
+	int status_int;
+
+	std::string line;
+	std::getline(file, line);
+	file >> x >> y >> hb>> hb_x >> hb_y
+		>> health >> attack
+		>> attack_cd >> aoe_cd >> aoe_range >> aoe_num
+		>> invincible_time >> invincible_elapsed
+		>> atk_elapsed >> aoe_elapsed >> status_int;
+
+	file.close();
+	
+	std::cout << x << " " << y << std::endl;
+	Hero->load(x, y, hb, hb_x, hb_y, health, attack, attack_cd, aoe_cd, aoe_range, aoe_num, invincible_time);
+	invincible_time_elapsed = invincible_elapsed;
+	attack_elapsed = atk_elapsed;
+	aoe_elapsed = aoe_elapsed;
+	move_status = static_cast<Move_Status>(status_int);
+
+	std::cout << "[Load] Hero state loaded from " << filename << std::endl;
+
 }
 
 Camera::Camera(GamesEngineeringBase::Window& canvas, unsigned int map_w, unsigned int map_h) :
@@ -139,11 +225,24 @@ void Camera::update(Manager_hero& hero)
 Manager_map::Manager_map(GamesEngineeringBase::Window& canvas) : map(), tiles()
 {
 	tiles.tiles_init("map");
-	map.load_map("./Resource/map/tiles.txt");
+	//map.load_map("./Resource/map/tiles.txt");
 	//trap = new Trap[map.get_trap_num()];
 	//cam.camera_init(canvas, map.get_map_width() * map.get_tiles_width(),
 	//	map.get_map_height() * map.get_tiles_height());
 
+}
+
+bool Manager_map::map_init(std::string filename)
+{
+	std::string f_name = "./Resource/map/" + filename + ".txt";
+	std::cout << f_name << "init map" << std::endl;
+	map.load_map(f_name);
+	//if (map.load_map(f_name))
+	//	return true;
+	//else
+	//	return false;
+
+	return true;
 }
 
 void Manager_map::draw(GamesEngineeringBase::Window& canvas, Manager_hero& hero, Camera& cam)

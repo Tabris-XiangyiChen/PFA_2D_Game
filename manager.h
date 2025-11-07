@@ -26,16 +26,15 @@ Position static rebound(Position from, Position to, float hitbox_len)
 
 class Manager_hero
 {
-	Charactor Hero;
-	Move_Status move_status = Move_Status::Front;
+	Charactor* Hero;
+	Move_Status move_status;
 	float invincible_time_elapsed = 0;
 	float attack_elapsed;
 	float aoe_elapsed;
 public:
-	Manager_hero(GamesEngineeringBase::Window& canvas) : Hero(), attack_elapsed(0), aoe_elapsed(0)
-	{
-		Hero.load_image("Wizard");
-	}
+	Manager_hero(GamesEngineeringBase::Window& canvas);
+
+	void init();
 
 	void update(GamesEngineeringBase::Window& canvas, Manager_map& map, float time);
 
@@ -46,36 +45,31 @@ public:
 		invincible_time_elapsed += time;
 	}
 
-	void zero_invincible_time_elapsed()
-	{
-		invincible_time_elapsed = 0;
-	}
+	void zero_invincible_time_elapsed() { invincible_time_elapsed = 0; }
 
-	void zero_attack_elapsed()
-	{
-		attack_elapsed = 0;
-	}
+	void zero_attack_elapsed() { attack_elapsed = 0; }
 
-	void zero_aoe_elapsed()
-	{
-		aoe_elapsed = 0;
-	}
+	void zero_aoe_elapsed() { aoe_elapsed = 0; }
 
 	void draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam);
 
-	void suffer_attack(unsigned int attack) { Hero.suffer_attack(attack); }
+	void save_hero_state(const std::string& filename);
 
-	unsigned int get_hero_attack() { return Hero.get_attack(); }
+	void load_hero_state(std::string filename);
 
-	float get_attack_cd() { return Hero.get_attack_cd(); }
+	void suffer_attack(unsigned int attack) { Hero->suffer_attack(attack); }
 
-	float get_aoe_cd() { return Hero.get_aoe_cd(); }
+	unsigned int get_hero_attack() { return Hero->get_attack(); }
 
-	float get_aoe_range() { return Hero.get_aoe_range(); }
+	float get_attack_cd() { return Hero->get_attack_cd(); }
 
-	unsigned int get_aoe_num() { return Hero.get_aoe_num(); }
+	float get_aoe_cd() { return Hero->get_aoe_cd(); }
 
-	float get_invincible_time() { return Hero.get_invincible_time(); }
+	float get_aoe_range() { return Hero->get_aoe_range(); }
+
+	unsigned int get_aoe_num() { return Hero->get_aoe_num(); }
+
+	float get_invincible_time() { return Hero->get_invincible_time(); }
 
 	float get_invincible_time_elapsed() { return invincible_time_elapsed;  }
 
@@ -85,24 +79,29 @@ public:
 
 
 	//Get the unit's X location
-	inline float get_x() { return Hero.get_x(); }
+	inline float get_x() { return Hero->get_x(); }
 
 	//Get the unit's Y location
-	inline float get_y() { return Hero.get_y(); }
+	inline float get_y() { return Hero->get_y(); }
 
-	int get_health() { return Hero.get_health(); }
+	int get_health() { return Hero->get_health(); }
 
 	//Get the image's width
-	inline unsigned int get_width() { return Hero.get_width(); }
+	inline unsigned int get_width() { return Hero->get_width(); }
 
 	//Get the image's height
-	inline unsigned int get_height() { return Hero.get_height(); }
+	inline unsigned int get_height() { return Hero->get_height(); }
 
-	inline unsigned int get_hitbox() { return Hero.get_hitbox(); }
+	inline unsigned int get_hitbox() { return Hero->get_hitbox(); }
 
-	inline float get_hitbox_x() { return Hero.get_hitbox_x(); }
+	inline float get_hitbox_x() { return Hero->get_hitbox_x(); }
 
-	inline float get_hitbox_y() { return Hero.get_hitbox_y(); }
+	inline float get_hitbox_y() { return Hero->get_hitbox_y(); }
+
+	~Manager_hero()
+	{
+		delete Hero;
+	}
 };
 
 class Camera
@@ -155,6 +154,8 @@ class Manager_map
 
 public:
 	Manager_map(GamesEngineeringBase::Window& canvas);
+
+	bool map_init(std::string filename);
 
 	void draw(GamesEngineeringBase::Window& canvas, Manager_hero& hero, Camera& cam);
 

@@ -69,6 +69,23 @@ void Charactor::update(Move_Status status)
 	m_status = status;
 }
 
+void Charactor::load(float x, float y, unsigned int hb, float hb_x, float hb_y,
+	int hea, unsigned int att, float att_cd, float ao_cd, float ao_ran, unsigned int aoe_n, float invin)
+{
+	locate_x = x;
+	locate_y = y;
+	hitbox = hb;
+	hitbox_center_x = hb_x;
+	hitbox_center_y = hb_y;
+	health = hea;
+	attack = att;
+	attack_cd = att_cd;
+	aoe_cd = ao_cd;
+	aoe_range = ao_ran;
+	aoe_num = aoe_n;
+	invincible_time = invin;
+}
+
 bool Enemy::load_image()
 {
 	for (unsigned int i = 0; i < enemy_move_status_num; i++)

@@ -172,12 +172,8 @@ public:
 	bool load_map(const char* filename);
 
 
-	bool load_map(const std::string& filename)
-	{
-		std::ifstream map_file(filename.c_str());
-		if (!map_file.is_open())
-			return false;
-	}
+	bool load_map(const std::string& filename);
+
 
 	unsigned int get_trap_num() const { return trap_num; }
 

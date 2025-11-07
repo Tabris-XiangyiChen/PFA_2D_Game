@@ -24,8 +24,8 @@ struct Position
 	float y;
 };
 
-#include <iostream>
-#include <stdexcept>
+//#include <iostream>
+//#include <stdexcept>
 
 template<typename T>
 class My_Stack {
@@ -141,16 +141,10 @@ public:
 	//virtual void draw(GamesEngineeringBase::Window& canvas) = 0;
 
 	//Get the unit's X location
-	inline float get_x()
-	{
-		return locate_x;
-	}
+	inline float get_x() { return locate_x; }
 	
 	//Get the unit's Y location
-	inline float get_y()
-	{
-		return locate_y;
-	}
+	inline float get_y() {	return locate_y; }
 
 	inline unsigned int get_hitbox() { return hitbox; }
 
@@ -249,6 +243,9 @@ public:
 	void update(GamesEngineeringBase::Window& canvas, float x, float y, Move_Status status);
 
 	void update(Move_Status stauts);
+
+	void load(float x, float y,unsigned int hb, float hb_x, float hb_y, int hea, unsigned int att, 
+		float att_cd, float ao_cd, float aoe_ran, unsigned int aoe_n, float invin);
 
 	GamesEngineeringBase::Image& operator[](unsigned int index) { return image[index]; }
 
