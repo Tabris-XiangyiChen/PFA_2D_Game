@@ -173,7 +173,6 @@ public:
 
 	bool load_map(const char* filename);
 
-
 	bool load_map(const std::string& filename);
 
 	std::string get_map_name() { return name; }

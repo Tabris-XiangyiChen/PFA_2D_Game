@@ -14,18 +14,79 @@ enum class GameMode {
 	NONE,
 	NORMAL,
 	HARD,
-	SURVIVAL
+    NORMAL_INFINITE,
+    HARD_INFINITE
 };
 
+void load_game_mode(std::string filename, GameMode mode)
+{
+    std::ifstream file(filename, std::ios::in);
+    if (!file.is_open()) {
+        std::cerr << "[Error] Cannot open load file: " << filename << std::endl;
+        return;
+    }
+    std::string line;
+    while (std::getline(file, line))
+    {
+        std::cout << line << std::endl;
+        if (line.find("Mode States") != std::string::npos)
+            break;
+    }
+    unsigned int m;
+    file >> m;
+    mode = static_cast<GameMode>(m);
+}
+
+void save_game_mode(std::string filename, GameMode mode)
+{
+    std::ofstream file(filename, std::ios::out | std::ios::trunc);
+    if (!file.is_open()) {
+        std::cerr << "[Error] Cannot open save file: " << filename << std::endl;
+        return;
+    }
+    file << "Map States" << std::endl
+        << static_cast<unsigned int>(mode) << std::endl;
+    file.close();
+}
+
 void manager(GamesEngineeringBase::Window& canvas, float dt, Manager_hero& hero,
+    Manager_map& map, Camera& cam, Manager_enemy& ene, Manager_bullet& bul)
+{
+
+
+    hero.update(canvas, map, dt);
+    cam.update(hero);
+    ene.update(canvas, map, hero, cam, dt);
+    bul.update(canvas, map, hero, ene, cam, dt);
+}
+
+void manager_infinite(GamesEngineeringBase::Window& canvas, float dt, Manager_hero& hero,
 	Manager_map& map, Camera& cam, Manager_enemy& ene, Manager_bullet& bul)
 {
 
 
-	hero.update(canvas, map, dt);
-	cam.update(hero);
-	ene.update(canvas, map, hero, cam, dt);
-	bul.update(canvas, map, hero, ene, cam, dt);
+	hero.update_infinite(canvas, map, dt);
+	cam.update_infinite(hero);
+	ene.update_infinite(canvas, map, hero, cam, dt);
+	bul.update_infinite(canvas, map, hero, ene, cam, dt);
+}
+
+void manager_draw(GamesEngineeringBase::Window& canvas, float dt, Manager_hero& hero,
+    Manager_map& map, Camera& cam, Manager_enemy& ene, Manager_bullet& bul)
+{
+    map.draw(canvas, hero, cam);
+    hero.draw(canvas, map, cam);
+    ene.draw(canvas, map, cam);
+    bul.draw(canvas, map, cam);
+}
+
+void manager_draw_infinite(GamesEngineeringBase::Window& canvas, float dt, Manager_hero& hero,
+    Manager_map& map, Camera& cam, Manager_enemy& ene, Manager_bullet& bul)
+{
+    map.draw_infinite(canvas, hero, cam);
+    hero.draw(canvas, map, cam);
+    ene.draw_infinite(canvas, map, cam);
+    bul.draw_infinite(canvas, map, cam);
 }
 
 int main()
@@ -75,89 +136,144 @@ int main()
         switch (state)
         {
             // menu
-        case GameState::MENU:
-        {
-            // 绘制菜单
-            //canvas.drawText(350, 200, "=== SELECT GAME MODE ===", 255, 255, 255);
-            //canvas.drawText(380, 250, "[1] Normal Mode", 200, 200, 200);
-            //canvas.drawText(380, 280, "[2] Hard Mode", 200, 200, 200);
-            //canvas.drawText(380, 310, "[3] Survival Mode", 200, 200, 200);
-            //canvas.drawText(380, 350, "[Q] Quit", 200, 200, 200);
-
-            // choose mode
-            if (canvas.keyPressed('1'))
+            case GameState::MENU:
             {
-                mode = GameMode::NORMAL;
-                hero.init();
-                //hero = Manager_hero(canvas);
-                map.map_init("./Resource/map/tiles.txt");
-                cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
-                ene = Manager_enemy(canvas);
-                bul = Manager_bullet(canvas);
-                state = GameState::PLAYING;
-                std::cout << "Switched to NORMAL mode" << std::endl;
-            }
-            //else if (canvas.keyPressed('2'))
-            //{
-            //    mode = GameMode::HARD;
-            //    map.map_init("tiles_hard");
-            //    cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
-            //    ene = Manager_enemy(canvas);
-            //    bul = Manager_bullet(canvas);
-            //    state = GameState::PLAYING;
-            //    std::cout << "Switched to HARD mode" << std::endl;
-            //}
-            // 
-            //else if (canvas.keyPressed('3'))
-            //{
-            //    mode = GameMode::SURVIVAL;
-            //    map.map_init("tiles_survival");
-            //    cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
-            //    ene = Manager_enemy(canvas);
-            //    bul = Manager_bullet(canvas);
-            //    state = GameState::PLAYING;
-            //    std::cout << "Switched to SURVIVAL mode" << std::endl;
-            //}
+                // 绘制菜单
+                //canvas.drawText(350, 200, "=== SELECT GAME MODE ===", 255, 255, 255);
+                //canvas.drawText(380, 250, "[1] Normal Mode", 200, 200, 200);
+                //canvas.drawText(380, 280, "[2] Hard Mode", 200, 200, 200);
+                //canvas.drawText(380, 310, "[3] Survival Mode", 200, 200, 200);
+                //canvas.drawText(380, 350, "[Q] Quit", 200, 200, 200);
 
-            break;
-        }
+                // choose mode
+                if (canvas.keyPressed('1'))
+                {
+                    mode = GameMode::NORMAL;
+                    hero.init();
+                    //hero = Manager_hero(canvas);
+                    map.map_init("./Resource/map/tiles.txt");
+                    cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
+                    ene = Manager_enemy(canvas);
+                    bul = Manager_bullet(canvas);
+                    state = GameState::PLAYING;
+                    std::cout << "Switched to NORMAL mode" << std::endl;
+                }
+                else if (canvas.keyPressed('2'))
+                {
+                    mode = GameMode::HARD;
+                    hero.init();
+                    map.map_init("./Resource/map/tiles.txt");
+                    cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
+                    ene = Manager_enemy(canvas);
+                    bul = Manager_bullet(canvas);
+                    state = GameState::PLAYING;
+                    std::cout << "Switched to HARD mode" << std::endl;
+                }
+             
+                else if (canvas.keyPressed('3'))
+                {
+                    mode = GameMode::NORMAL_INFINITE;
+                    hero.init();
+                    map.map_init("./Resource/map/tiles.txt");
+                    cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
+                    ene = Manager_enemy(canvas);
+                    bul = Manager_bullet(canvas);
+                    state = GameState::PLAYING;
+                    std::cout << "Switched to SURVIVAL mode" << std::endl;
+                }
 
-        //  game running
-        case GameState::PLAYING:
-        {
-            if (canvas.keyPressed(VK_ESCAPE))
-            {
-                state = GameState::MENU;
-                std::cout << "Back to MENU" << std::endl;
+                else if (canvas.keyPressed('4'))
+                {
+                    mode = GameMode::HARD_INFINITE;
+                    hero.init();
+                    map.map_init("./Resource/map/tiles.txt");
+                    cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
+                    ene = Manager_enemy(canvas);
+                    bul = Manager_bullet(canvas);
+                    state = GameState::PLAYING;
+                    std::cout << "Switched to SURVIVAL mode" << std::endl;
+                }
+
+                if (canvas.keyPressed('L'))
+                {
+                    load_game_mode("save.txt", mode);
+
+                    hero.init();
+                    map.map_init("./Resource/map/tiles.txt");
+                    cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
+                    ene = Manager_enemy(canvas);
+                    bul = Manager_bullet(canvas);
+                    state = GameState::PLAYING;
+                    map.load_map_state("save.txt");
+                    hero.load_hero_state("save.txt");
+                    ene.load_enemy_state("save.txt");
+                    bul.load_bullet_state("save.txt");
+                }
+
                 break;
             }
 
-            if (canvas.keyPressed('M'))
+            //  game running
+            case GameState::PLAYING:
             {
-                map.save_map_state("save.txt");
-                hero.save_hero_state("save.txt");
-                ene.save_enemy_state("save.txt");
-                bul.save_bullet_state("save.txt");
+                switch (mode)
+                {
+                case(GameMode::NORMAL):
+                    {
+                        if (canvas.keyPressed(VK_ESCAPE))
+                        {
+                            state = GameState::MENU;
+                            std::cout << "Back to MENU" << std::endl;
+                            break;
+                        }
+
+                        if (canvas.keyPressed('M'))
+                        {
+                            save_game_mode("save.txt", mode);
+
+                            map.save_map_state("save.txt");
+                            hero.save_hero_state("save.txt");
+                            ene.save_enemy_state("save.txt");
+                            bul.save_bullet_state("save.txt");
+                        }
+
+                        manager(canvas, dt, hero, map, cam, ene, bul);
+                        manager_draw(canvas, dt, hero, map, cam, ene, bul);
+                        break;
+                    }
+
+                case(GameMode::NORMAL_INFINITE):
+                {
+                    if (canvas.keyPressed(VK_ESCAPE))
+                    {
+                        state = GameState::MENU;
+                        std::cout << "Back to MENU" << std::endl;
+                        break;
+                    }
+
+                    if (canvas.keyPressed('M'))
+                    {
+                        save_game_mode("save.txt", mode);
+
+                        map.save_map_state("save.txt");
+                        hero.save_hero_state("save.txt");
+                        ene.save_enemy_state("save.txt");
+                        bul.save_bullet_state("save.txt");
+                    }
+
+                    manager_infinite(canvas, dt, hero, map, cam, ene, bul);
+                    manager_draw_infinite(canvas, dt, hero, map, cam, ene, bul);
+                    break;
+                }
+                    
+                default:
+                    break;
+                }
+                break;
             }
 
-            if (canvas.keyPressed('L'))
-            {
-                map.load_map_state("save.txt");
-                hero.load_hero_state("save.txt");
-                ene.load_enemy_state("save.txt");
-                bul.load_bullet_state("save.txt");
-            }
-
-            manager(canvas, dt, hero, map, cam, ene, bul);
-            map.draw(canvas, hero, cam);
-            hero.draw(canvas, map, cam);
-            ene.draw(canvas, map, cam);
-            bul.draw(canvas, map, cam);
-            break;
-        }
-
-        default:
-            break;
+            default:
+                break;
         }
 		// Display the frame on the screen. This must be called once the frame 
 		//is finished in order to display the frame.

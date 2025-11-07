@@ -38,6 +38,8 @@ public:
 
 	void update(GamesEngineeringBase::Window& canvas, Manager_map& map, float time);
 
+	void update_infinite(GamesEngineeringBase::Window& canvas, Manager_map& map, float time);
+
 	void update_cd(float time)
 	{
 		attack_elapsed += time;
@@ -143,6 +145,8 @@ public:
 	bool get_is_at_boundry() { return is_at_boundry;  }
 
 	void update(Manager_hero& hero);
+
+	void update_infinite(Manager_hero& hero);
 };
 
 
@@ -158,6 +162,8 @@ public:
 	bool map_init(std::string filename);
 
 	void draw(GamesEngineeringBase::Window& canvas, Manager_hero& hero, Camera& cam);
+
+	void draw_infinite(GamesEngineeringBase::Window& canvas, Manager_hero& hero, Camera& cam);
 
 	unsigned int get_map_width_pix()
 	{
@@ -209,7 +215,11 @@ public:
 
 	Position create_out_camera_pos(Manager_map& map, Camera& cam,bool if_near_cam);
 
+	Position create_out_camera_pos_infinite(Manager_map& map, Camera& cam, bool if_near_cam);
+
 	void create_enemy(Manager_map& map,Camera& cam);
+
+	void create_enemy_infinite(Manager_map& map, Camera& cam);
 
 	void zero_enemy_attack_time_elapsed(unsigned int index) { enemy_attack_time_elapsed[index] = 0; }
 
@@ -233,11 +243,15 @@ public:
 
 	void update(GamesEngineeringBase::Window& canvas, Manager_map& map, Manager_hero& hero, Camera& cam, float time);
 
+	void update_infinite(GamesEngineeringBase::Window& canvas, Manager_map& map, Manager_hero& hero, Camera& cam, float time);
+
 	void save_enemy_state(const std::string& filename);
 
 	void load_enemy_state(const std::string filename);
 
 	void draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam);
+
+	void draw_infinite(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam);
 
 	float get_enemy_attack_time_elapsed(unsigned int index) { return enemy_attack_time_elapsed[index]; }
 
@@ -297,13 +311,15 @@ public:
 
 	void move_to_nearest_hero(unsigned int bullet_index, Manager_hero& hero, float time);
 
+	void move_to_nearest_hero_infinite(unsigned int bullet_index, Manager_hero& hero, float time, Manager_map& map);
+
 	void move_to_nearest_enemy(unsigned int bullet_index, Manager_enemy& enemy, float time);
 
 	void create_bullet(std::string name, Bullet_type ty, Unit_Type fr);
 
 	void create_hero_bullet(Manager_hero& hero, Manager_enemy& enemy);
 
-	void create_hero_aoe_bullet(Manager_hero& hero, Manager_enemy& enemy);
+	void create_hero_aoe_bullet(Manager_hero& hero, Manager_enemy& enemy, Manager_map& map);
 
 	void check_delete_Light(unsigned int bullet_index, Manager_enemy& enemy, float time);
 
@@ -313,11 +329,15 @@ public:
 
 	void update(GamesEngineeringBase::Window& canvas, Manager_map& map, Manager_hero& hero, Manager_enemy& enemy,  Camera& cam, float time);
 
+	void update_infinite(GamesEngineeringBase::Window& canvas, Manager_map& map, Manager_hero& hero, Manager_enemy& enemy, Camera& cam, float time);
+
 	void save_bullet_state(const std::string & filename);
 
 	void load_bullet_state(const std::string& filename);
 
 	void draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam);
+
+	void draw_infinite(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam);
 
 	//Get the unit's X location
 	inline float get_x(unsigned int index) { return bullet[index]->get_x(); }

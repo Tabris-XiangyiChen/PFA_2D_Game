@@ -20,7 +20,7 @@ void Charactor::draw(GamesEngineeringBase::Window& canvas, unsigned int x, unsig
 {
 	for (unsigned int w = 0; w < image[static_cast<unsigned int>(this->m_status)].width; w++)
 	{
-		//Make sure the image's pixel in the canvas
+		//Make sure the image's pixel in the cam
 		if (w + x > 0 && w + x < canvas.getWidth())
 			for (unsigned int h = 0; h < image[static_cast<unsigned int>(this->m_status)].height; h++)
 			{

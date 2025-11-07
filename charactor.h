@@ -177,7 +177,7 @@ private:
 	unsigned int attack;
 	float attack_cd;
 	float aoe_cd;
-	float aoe_range = 200.f;
+	float aoe_range = 300.f;
 	unsigned int aoe_num = 5;
 	float invincible_time;
 	Move_Status m_status;
@@ -190,7 +190,7 @@ public:
 		attack(5),
 		attack_cd(0.5f),
 		invincible_time(1.f),
-		aoe_cd(10.f),
+		aoe_cd(1.f),
 		m_status(Move_Status::Front) {}
 
 	Charactor(float x, float y, int health, int speed, int attack) :
@@ -199,7 +199,7 @@ public:
 		speed(speed),
 		attack(attack),
 		attack_cd(0.5f),
-		aoe_cd(10.f),
+		aoe_cd(1.f),
 		invincible_time(1.f),
 		m_status(Move_Status::Front) {
 	}
