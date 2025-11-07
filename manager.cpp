@@ -105,13 +105,13 @@ void Manager_hero::draw(GamesEngineeringBase::Window& canvas, Manager_map& map, 
 
 void Manager_hero::save_hero_state(const std::string& filename)
 {
-	std::ofstream file(filename, std::ios::out | std::ios::trunc);
+	std::ofstream file(filename, std::ios::out | std::ios::app);
 	if (!file.is_open()) {
 		std::cerr << "[Error] Cannot open save file: " << filename << std::endl;
 		return;
 	}
 
-	file << "Hero Stats" << std::endl
+	file << "Hero States" << std::endl
 		<< Hero->get_x() << " "
 		<< Hero->get_y() << " "
 		<< Hero->get_hitbox() << " "
@@ -150,7 +150,13 @@ void Manager_hero::load_hero_state(std::string filename)
 	int status_int;
 
 	std::string line;
-	std::getline(file, line);
+	while (std::getline(file, line))
+	{
+		std::cout << line << std::endl;
+		if (line.find("Hero States") != std::string::npos)
+			break;
+	}
+
 	file >> x >> y >> hb>> hb_x >> hb_y
 		>> health >> attack
 		>> attack_cd >> aoe_cd >> aoe_range >> aoe_num
@@ -234,9 +240,9 @@ Manager_map::Manager_map(GamesEngineeringBase::Window& canvas) : map(), tiles()
 
 bool Manager_map::map_init(std::string filename)
 {
-	std::string f_name = "./Resource/map/" + filename + ".txt";
-	std::cout << f_name << "init map" << std::endl;
-	map.load_map(f_name);
+	//std::string f_name = "./Resource/map/" + filename + ".txt";
+	//std::cout << f_name << "init map" << std::endl;
+	map.load_map(filename);
 	//if (map.load_map(f_name))
 	//	return true;
 	//else
@@ -263,6 +269,46 @@ void Manager_map::draw(GamesEngineeringBase::Window& canvas, Manager_hero& hero,
 		}
 		//std::cout << std::endl;
 	}
+}
+
+void Manager_map::save_map_state(std::string filename)
+{
+	std::ofstream file(filename, std::ios::out | std::ios::trunc);
+	if (!file.is_open()) {
+		std::cerr << "[Error] Cannot open save file: " << filename << std::endl;
+		return;
+	}
+
+	file << "Map Stats" << std::endl
+		<< map.get_map_name() << " "
+		<< std::endl;
+
+	file.close();
+	std::cout << "[Save] Map state saved to " << filename << std::endl;
+}
+
+void Manager_map::load_map_state(std::string filename)
+{
+	std::ifstream file(filename, std::ios::in);
+	if (!file.is_open()) {
+		std::cerr << "[Error] Cannot open load file: " << filename << std::endl;
+		return;
+	}
+
+	std::string name;
+
+	std::string line;
+	std::getline(file, line);
+	std::getline(file, name);
+	std::cout << name << std::endl;
+
+	map_init(name);
+
+	file.close();
+
+
+	std::cout << "[Load] Map state loaded from " << filename << std::endl;
+
 }
 
 Manager_enemy::Manager_enemy(GamesEngineeringBase::Window& canvas)
@@ -508,7 +554,7 @@ void Manager_enemy::save_enemy_state(const std::string& filename)
 		return;
 	}
 
-	file << "Enemy Stats" << std::endl
+	file << "Enemy States" << std::endl
 		<< current_size << " "
 		<< enemy_create_time_elapsed << std::endl;
 
@@ -533,6 +579,65 @@ void Manager_enemy::save_enemy_state(const std::string& filename)
 
 	file.close();
 	std::cout << "[Save] Enemies saved to " << filename << " (" << current_size << " units)" << std::endl;
+}
+
+void Manager_enemy::load_enemy_state(const std::string filename)
+{
+	std::ifstream file(filename, std::ios::in);
+	if (!file.is_open()) {
+		std::cerr << "[Error] Cannot open load file: " << filename << std::endl;
+		return;
+	}
+
+	for (unsigned int i = 0; i < max_enemy_num; i++)
+	{
+		if(current_size != 0)
+		{
+			if (enemy[i] == nullptr)
+				continue;
+
+			delete enemy[i];
+			enemy[i] = nullptr;
+			move_status[i] = Move_Status::Front;
+			enemy_attack_time_elapsed[i] = 0;
+			current_size--;
+		}
+	}
+
+	std::string line;
+	while (std::getline(file, line))
+	{
+		std::cout << line << std::endl;
+		if (line.find("Enemy States") != std::string::npos)
+			break;
+	}
+
+	file >> current_size >> create_threshold;
+
+	for (unsigned int i = 0; i < current_size; i++)
+	{
+		float x, y, hb, hb_x, hb_y;
+		int health;
+		unsigned int attack, attack_cd, speed, enemy_type;
+		std::string enemy_name;
+		int m_status;
+		
+		file >> x >> y >> hb >> hb_x >> hb_y
+			>> enemy_name >> enemy_type >> health
+			>> speed >> attack >> attack_cd
+			>> m_status >> enemy_attack_time_elapsed[i];
+
+		move_status[i] = static_cast<Move_Status>(m_status);
+		enemy[i] = new Enemy(enemy_name, static_cast<Enemy_type>(enemy_type), x, y, health, speed, attack, attack_cd);
+		enemy[i]->load_image();
+	}
+
+
+	file.close();
+
+
+	std::cout << "[Load] Enemy state loaded from " << filename << std::endl;
+
 }
 
 void Manager_enemy::draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam)
@@ -594,6 +699,7 @@ void Manager_bullet::create_hero_bullet(Manager_hero& hero, Manager_enemy& enemy
 				bullet[i] = new Bullet("Blue", Bullet_type::Blue, Unit_Type::Hero, 
 					hero.get_hitbox_x(), hero.get_hitbox_y(), 250, hero.get_hero_attack());
 				bullet[i]->load_image();
+				current_size++;
 				//std::cout << hero.get_hitbox_x() << hero.get_hitbox_y() << std::endl;
 				hero.zero_attack_elapsed();
 				Position fw = set_forward(i, enemy);
@@ -745,6 +851,7 @@ void Manager_bullet::create_hero_aoe_bullet(Manager_hero& hero, Manager_enemy& e
 						enemy[target_index]->get_hitbox_y());
 
 					bullet[i]->load_image();
+					current_size++;
 					current_aoe_bullet--;
 
 					std::cout << "[AOE] Created bullet at enemy #" << target_index
@@ -832,6 +939,7 @@ void Manager_bullet::create_enemy_bullet(Manager_enemy& enemy)
 				bullet[i] = new Bullet("Red", Bullet_type::Red, Unit_Type::Enenmy,
 					enemy[j]->get_hitbox_x(), enemy[j]->get_hitbox_y(), 4, enemy[j]->get_attack());
 				bullet[i]->load_image();
+				current_size++;
 				//std::cout << hero.get_hitbox_x() << hero.get_hitbox_y() << std::endl;
 				//std::cout << "create enemy bullet" << std::endl;
 				//std::cout << "create bullet pos: " << bullet[i]->get_hitbox_x() << "," << bullet[i]->get_hitbox_y() << std::endl;
@@ -1081,7 +1189,7 @@ void Manager_bullet::save_bullet_state(const std::string& filename)
 		return;
 	}
 
-	file << "Bullet Stats" << std::endl
+	file << "Bullet States" << std::endl
 		<< current_size << " "
 		<< aoe_Light_render_start << std::endl;
 
@@ -1107,6 +1215,67 @@ void Manager_bullet::save_bullet_state(const std::string& filename)
 
 	file.close();
 	std::cout << "[Save] Bullet saved to " << filename << " (" << current_size << " units)" << std::endl;
+}
+
+void Manager_bullet::load_bullet_state(const std::string& filename)
+{
+	std::ifstream file(filename, std::ios::in);
+	if (!file.is_open()) {
+		std::cerr << "[Error] Cannot open load file: " << filename << std::endl;
+		return;
+	}
+
+	for (unsigned int i = 0; i < max_bullet_num; i++)
+	{
+		if (current_size != 0)
+		{
+			if (bullet[i] == nullptr)
+				continue;
+
+			delete bullet[i];
+			bullet[i] = nullptr;
+			move_status[i] = Move_Status::Front;
+			forward[i] = { 0, 0 };
+			current_size--;
+		}
+	}
+
+	std::string line;
+	while (std::getline(file, line))
+	{
+		std::cout << line << std::endl;
+		if (line.find("Bullet States") != std::string::npos)
+			break;
+	}
+
+	file >> current_size >> aoe_Light_render_start;
+
+	for (unsigned int i = 0; i < current_size; i++)
+	{
+		float x, y, hb, hb_x, hb_y;
+		float for_x, for_y;
+		int health;
+		unsigned int attack, speed, bullet_type, bullet_from;
+		std::string bullet_name;
+		int m_status;
+
+		file >> x >> y >> hb >> hb_x >> hb_y
+			>> bullet_name >> bullet_type >> bullet_from 
+			>> health >> speed >> attack 
+			>> m_status >> for_x >> for_y;
+
+		move_status[i] = static_cast<Move_Status>(m_status);
+		bullet[i] = new Bullet(bullet_name, static_cast<Bullet_type>(bullet_type), static_cast<Unit_Type>(bullet_from),
+			x, y, speed, attack);
+		bullet[i]->load_image();
+		forward[i] = { for_x , for_y };
+	}
+
+
+	file.close();
+
+	std::cout << "[Load] Bullet state loaded from " << filename << std::endl;
+
 }
 
 void Manager_bullet::draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam)

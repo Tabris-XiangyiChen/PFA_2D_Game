@@ -131,6 +131,7 @@ public:
 
 class Map
 {
+	std::string name;
 	unsigned int tiles_width, tiles_height;
 	unsigned int map_width, map_height;
 	unsigned int trap_num;
@@ -138,6 +139,7 @@ class Map
 	Trap** trap;
 public:
 	Map() :
+		name(""),
 		tiles_width(0),
 		tiles_height(0),
 		map_width(0),
@@ -174,6 +176,7 @@ public:
 
 	bool load_map(const std::string& filename);
 
+	std::string get_map_name() { return name; }
 
 	unsigned int get_trap_num() const { return trap_num; }
 

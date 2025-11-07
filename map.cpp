@@ -67,6 +67,7 @@ void Trap::trap_init(std::string name, Map& map, float x, float y)
 
 bool Map::load_map(const char* filename)
 {
+	name = filename;
 	std::ifstream map_file(filename, std::ios::in);
 	if (!map_file.is_open())
 	{
@@ -153,6 +154,7 @@ bool Map::load_map(const char* filename)
 
 bool Map::load_map(const std::string& filename)
 {
+	name = filename;
 	std::ifstream map_file(filename, std::ios::in);
 	if (!map_file.is_open())
 	{

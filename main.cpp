@@ -90,7 +90,7 @@ int main()
                 mode = GameMode::NORMAL;
                 hero.init();
                 //hero = Manager_hero(canvas);
-                map.map_init("tiles");
+                map.map_init("./Resource/map/tiles.txt");
                 cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
                 ene = Manager_enemy(canvas);
                 bul = Manager_bullet(canvas);
@@ -134,6 +134,7 @@ int main()
 
             if (canvas.keyPressed('M'))
             {
+                map.save_map_state("save.txt");
                 hero.save_hero_state("save.txt");
                 ene.save_enemy_state("save.txt");
                 bul.save_bullet_state("save.txt");
@@ -141,7 +142,10 @@ int main()
 
             if (canvas.keyPressed('L'))
             {
+                map.load_map_state("save.txt");
                 hero.load_hero_state("save.txt");
+                ene.load_enemy_state("save.txt");
+                bul.load_bullet_state("save.txt");
             }
 
             manager(canvas, dt, hero, map, cam, ene, bul);

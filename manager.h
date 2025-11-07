@@ -170,6 +170,10 @@ public:
 		return map.get_map_height() * map.get_tiles_height();
 	}
 
+	void save_map_state(std::string filename);
+
+	void load_map_state(std::string filename);
+
 	inline unsigned int get_trap_num() { return map.get_trap_num(); }
 
 	unsigned int get_tiles_width() { return map.get_tiles_width(); }
@@ -230,6 +234,8 @@ public:
 	void update(GamesEngineeringBase::Window& canvas, Manager_map& map, Manager_hero& hero, Camera& cam, float time);
 
 	void save_enemy_state(const std::string& filename);
+
+	void load_enemy_state(const std::string filename);
 
 	void draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam);
 
@@ -308,6 +314,8 @@ public:
 	void update(GamesEngineeringBase::Window& canvas, Manager_map& map, Manager_hero& hero, Manager_enemy& enemy,  Camera& cam, float time);
 
 	void save_bullet_state(const std::string & filename);
+
+	void load_bullet_state(const std::string& filename);
 
 	void draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam);
 
