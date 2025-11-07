@@ -135,6 +135,8 @@ int main()
             if (canvas.keyPressed('M'))
             {
                 hero.save_hero_state("save.txt");
+                ene.save_enemy_state("save.txt");
+                bul.save_bullet_state("save.txt");
             }
 
             if (canvas.keyPressed('L'))

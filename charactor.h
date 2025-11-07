@@ -363,6 +363,9 @@ public:
 	}
 	bool load_image();
 
+	void load(float x, float y, unsigned int hb, float hb_x, float hb_y, std::string ene_name,
+		Enemy_type ene_ty, int hea, unsigned int sp, unsigned int att, unsigned int att_cd);
+
 	void draw(GamesEngineeringBase::Window& canvas,int x, int y);
 
 	void update(GamesEngineeringBase::Window& canvas, float x, float y, Move_Status status);

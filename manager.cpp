@@ -111,7 +111,7 @@ void Manager_hero::save_hero_state(const std::string& filename)
 		return;
 	}
 
-	file << "Hero Status" << std::endl
+	file << "Hero Stats" << std::endl
 		<< Hero->get_x() << " "
 		<< Hero->get_y() << " "
 		<< Hero->get_hitbox() << " "
@@ -499,6 +499,41 @@ void Manager_enemy::update(GamesEngineeringBase::Window& canvas, Manager_map& ma
 			newY - static_cast<float>(enemy[i]->get_height() / 2), move_status[i]);
 	}
 };
+
+void Manager_enemy::save_enemy_state(const std::string& filename)
+{
+	std::ofstream file(filename, std::ios::out | std::ios::app);
+	if (!file.is_open()) {
+		std::cerr << "[Error] Cannot open save file: " << filename << std::endl;
+		return;
+	}
+
+	file << "Enemy Stats" << std::endl
+		<< current_size << " "
+		<< enemy_create_time_elapsed << std::endl;
+
+	for (unsigned int i = 0; i < max_enemy_num; i++) {
+		if (enemy[i] == nullptr) continue;
+
+		file 
+			<< enemy[i]->get_x() << " "
+			<< enemy[i]->get_y() << " "
+			<< enemy[i]->get_hitbox() << " "
+			<< enemy[i]->get_hitbox_x() << " "
+			<< enemy[i]->get_hitbox_y() << " "
+			<< enemy[i]->get_name() << " "
+			<< static_cast<int>(enemy[i]->get_type()) << " "
+			<< enemy[i]->get_health() << " "
+			<< enemy[i]->get_speed() << " "
+			<< enemy[i]->get_attack() << " "
+			<< enemy[i]->get_attack_cd() << " "
+			<< static_cast<int>(move_status[i]) << " "
+			<< enemy_attack_time_elapsed[i] << std::endl;
+	}
+
+	file.close();
+	std::cout << "[Save] Enemies saved to " << filename << " (" << current_size << " units)" << std::endl;
+}
 
 void Manager_enemy::draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam)
 {
@@ -1036,6 +1071,42 @@ void Manager_bullet::update(GamesEngineeringBase::Window& canvas, Manager_map& m
 		create_hero_aoe_bullet(hero, enemy);
 		std::cout << "AOE!" << std::endl;
 	}
+}
+
+void Manager_bullet::save_bullet_state(const std::string& filename)
+{
+	std::ofstream file(filename, std::ios::out | std::ios::app);
+	if (!file.is_open()) {
+		std::cerr << "[Error] Cannot open save file: " << filename << std::endl;
+		return;
+	}
+
+	file << "Bullet Stats" << std::endl
+		<< current_size << " "
+		<< aoe_Light_render_start << std::endl;
+
+	for (unsigned int i = 0; i < max_bullet_num; i++) {
+		if (bullet[i] == nullptr) continue;
+
+		file
+			<< bullet[i]->get_x() << " "
+			<< bullet[i]->get_y() << " "
+			<< bullet[i]->get_hitbox() << " "
+			<< bullet[i]->get_hitbox_x() << " "
+			<< bullet[i]->get_hitbox_y() << " "
+			<< bullet[i]->get_name() << " "
+			<< static_cast<int>(bullet[i]->get_type()) << " "
+			<< static_cast<int>(bullet[i]->get_from()) << " "
+			<< bullet[i]->get_health() << " "
+			<< bullet[i]->get_speed() << " "
+			<< bullet[i]->get_attack() << " "
+			<< static_cast<int>(move_status[i]) << " "
+			<< forward[i].x << " "
+			<< forward[i].y << std::endl;
+	}
+
+	file.close();
+	std::cout << "[Save] Bullet saved to " << filename << " (" << current_size << " units)" << std::endl;
 }
 
 void Manager_bullet::draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam)

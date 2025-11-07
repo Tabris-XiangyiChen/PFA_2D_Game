@@ -101,6 +101,22 @@ bool Enemy::load_image()
 	return true;
 }
 
+void Enemy::load(float x, float y, unsigned int hb, float hb_x, float hb_y, std::string ene_name,
+	Enemy_type ene_ty, int hea, unsigned int sp, unsigned int att, unsigned int att_cd)
+{
+	locate_x = x;
+	locate_y = y;
+	hitbox = hb;
+	hitbox_center_x = hb_x;
+	hitbox_center_y = hb_y;
+	enemy_name = ene_name;
+	type = ene_ty;
+	health = hea;
+	speed = sp;
+	attack = att;
+	attack_cd = att_cd;
+}
+
 void Enemy::draw(GamesEngineeringBase::Window& canvas, int x, int y)
 {
 	for (unsigned int w = 0; w < image[static_cast<unsigned int>(this->m_status)].width; w++)

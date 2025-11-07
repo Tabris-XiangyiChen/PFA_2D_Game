@@ -193,7 +193,7 @@ class Manager_enemy
 	float create_threshold = 3.f;
 
 	float enemy_attack_time_elapsed[max_enemy_num];
-	float enemy_attack_time_elapse = 0;
+	//float enemy_attack_time_elapse = 0;
 
 	unsigned int slime_max_num = 10;
 	unsigned int slime_current_num = 0;
@@ -228,6 +228,8 @@ public:
 	}
 
 	void update(GamesEngineeringBase::Window& canvas, Manager_map& map, Manager_hero& hero, Camera& cam, float time);
+
+	void save_enemy_state(const std::string& filename);
 
 	void draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam);
 
@@ -304,6 +306,8 @@ public:
 	void delete_bullet(unsigned int i);
 
 	void update(GamesEngineeringBase::Window& canvas, Manager_map& map, Manager_hero& hero, Manager_enemy& enemy,  Camera& cam, float time);
+
+	void save_bullet_state(const std::string & filename);
 
 	void draw(GamesEngineeringBase::Window& canvas, Manager_map& map, Camera& cam);
 
