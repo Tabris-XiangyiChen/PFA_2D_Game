@@ -599,12 +599,13 @@ Position Manager_enemy::create_out_camera_pos_infinite(Manager_map& map, Camera&
 }
 
 
-void Manager_enemy::create_enemy(Manager_map& map, Camera& cam)
+void Manager_enemy::create_enemy(Manager_map& map, Camera& cam, Manager_hero& hero)
 {
 	//If only use srand(),it sometimes happen the continuous enemy are the same;
 	static std::random_device rd;         
-	static std::mt19937 gen(rd());         
-	static std::uniform_int_distribution<> dist(0, e_index.get_enemy_index_num() - 1);
+	static std::mt19937 gen(rd());
+	// avoid create the upgrade
+	static std::uniform_int_distribution<> dist(0, e_index.get_enemy_index_num() - 2);
 
 	if (current_size < max_size)
 		if (enemy_create_time_elapsed > create_threshold)
@@ -628,9 +629,28 @@ void Manager_enemy::create_enemy(Manager_map& map, Camera& cam)
 				}
 			}
 		}
+
+	if (score > 100 && hero.get_is_upgrade() == false)
+	{
+		for (unsigned int i = 0; i < max_enemy_num; i++)
+		{
+			if (enemy[i] == nullptr)
+			{
+				Position pos = create_out_camera_pos(map, cam, false);
+				enemy[i] = new Enemy(e_index[4].name, e_index[4].type, pos.x, pos.y, e_index[4].health,
+					e_index[4].speed, e_index[4].attack, e_index[4].attack_cd);
+				//enemy_attack_time_elapsed[i] = e_index[index].attack_cd;
+				enemy[i]->load_image();
+				current_size++;
+				hero.set_upgrade(true);
+				std::cout << "creat upgrade" << std::endl;
+				break;
+			}
+		}
+	}
 }
 
-void Manager_enemy::create_enemy_infinite(Manager_map& map, Camera& cam)
+void Manager_enemy::create_enemy_infinite(Manager_map& map, Camera& cam, Manager_hero& hero)
 {
 	static std::random_device rd;
 	static std::mt19937 gen(rd());
@@ -663,12 +683,31 @@ void Manager_enemy::create_enemy_infinite(Manager_map& map, Camera& cam)
 			}
 		}
 	}
+
+	if (score > 100 && hero.get_is_upgrade() == false)
+	{
+		for (unsigned int i = 0; i < max_enemy_num; i++)
+		{
+			if (enemy[i] == nullptr)
+			{
+				Position pos = create_out_camera_pos(map, cam, false);
+				enemy[i] = new Enemy(e_index[4].name, e_index[4].type, pos.x, pos.y, e_index[4].health,
+					e_index[4].speed, e_index[4].attack, e_index[4].attack_cd);
+				//enemy_attack_time_elapsed[i] = e_index[index].attack_cd;
+				enemy[i]->load_image();
+				current_size++;
+				hero.set_upgrade(true);
+				std::cout << "creat upgrade" << std::endl;
+				break;
+			}
+		}
+	}
 }
 
 
 void Manager_enemy::delete_enemy(unsigned int i) 
 {
-	if (enemy[i]->get_health() == 0)
+	if (enemy[i]->get_health() <= 0)
 	{
 		score += e_index[enemy[i]->get_type()].health;
 		std::cout << "score: " << score << std::endl;
@@ -685,7 +724,7 @@ void Manager_enemy::update(GamesEngineeringBase::Window& canvas, Manager_map& ma
 {
 	enemy_create_time_elapsed += time;
 	update_enemy_attack_time_elapsed(time);
-	create_enemy(map, cam);
+	create_enemy(map, cam, hero);
 	
 	float speed;
 	/*for (unsigned int i = 0; i < max_enemy_num; i++)
@@ -793,6 +832,16 @@ void Manager_enemy::update(GamesEngineeringBase::Window& canvas, Manager_map& ma
 			hero.zero_invincible_time_elapsed();
 		}
 
+		if (dist_enemy_to_hero < mid_dist && enemy[i]->get_type() == Enemy_type::Upgrade)
+		{
+			hero.upgrade();
+			// kill the upgrade object
+			enemy[i]->suffer_attack(1);
+			delete_enemy(i);
+			//std::cout << "delete upgrade " << std::endl;
+			break;
+		}
+
 		new_x = max(0, min(new_x, static_cast<float>(map.get_map_width_pix() - enemy[i]->get_width())));
 		new_y = max(0, min(new_y, static_cast<float>(map.get_map_height_pix() - enemy[i]->get_height())));
 
@@ -811,7 +860,7 @@ void Manager_enemy::update_infinite(GamesEngineeringBase::Window& canvas, Manage
 {
 	enemy_create_time_elapsed += time;
 	update_enemy_attack_time_elapsed(time);
-	create_enemy_infinite(map, cam);
+	create_enemy_infinite(map, cam, hero);
 
 	float speed;
 	float map_width_pix = map.get_map_width_pix();
@@ -918,6 +967,15 @@ void Manager_enemy::update_infinite(GamesEngineeringBase::Window& canvas, Manage
 		{
 			hero.suffer_attack(e_index[enemy[i]->get_type()].attack);
 			hero.zero_invincible_time_elapsed();
+		}
+
+		if (dist_enemy_to_hero < mid_dist && enemy[i]->get_type() == Enemy_type::Upgrade)
+		{
+			hero.upgrade();
+			enemy[i]->suffer_attack(1);
+			delete_enemy(i);
+			std::cout << "delete upgrade " << std::endl;
+			break;
 		}
 
 		// reset the location
@@ -1201,30 +1259,30 @@ void Manager_bullet::create_hero_bullet(Manager_hero& hero, Manager_enemy& enemy
 
 void Manager_bullet::create_hero_aoe_bullet(Manager_hero& hero, Manager_enemy& enemy, Manager_map& map)
 {
-	std::cout << "[AOE] === create_hero_aoe_bullet() called ===" << std::endl;
+	//std::cout << "[AOE] === create_hero_aoe_bullet() called ===" << std::endl;
 
 	if (hero.get_aoe_elapsed() > hero.get_aoe_cd())
 	{
-		std::cout << "[AOE] Cooldown OK. Starting AOE bullet creation..." << std::endl;
+		std::cout << "AOE!!!" << std::endl;
 
 		unsigned int current_aoe_bullet = 0;
 		My_Stack<unsigned int> max_health_enemy_index;
 		float max_health = 0.f;
-		unsigned int max_health_enemy = UINT_MAX;
+		unsigned int max_health_enemy = 1e9f;
 
 		unsigned int aoe_num = hero.get_aoe_num();
-		std::cout << "[AOE] Target AOE bullet num: " << aoe_num
-			<< ", Range = " << hero.get_aoe_range() << std::endl;
+		//std::cout << "[AOE] Target AOE bullet num: " << aoe_num
+		//	<< ", Range = " << hero.get_aoe_range() << std::endl;
 
 		// === find biggest health enemy index ===
 		for (unsigned int i = 0; i < aoe_num; i++)
 		{
 			max_health = 0.f;
-			max_health_enemy = UINT_MAX;
+			max_health_enemy = 1e9f;
 
 			for (unsigned int j = 0; j < max_enemy_num; j++)
 			{
-				if (enemy[j] != nullptr)
+				if (enemy[j] != nullptr && enemy[j]->get_type() != Enemy_type::Upgrade)
 				{
 					float dx = enemy.get_hit_box_x(j) - hero.get_hitbox_x();
 					float dy = enemy.get_hit_box_y(j) - hero.get_hitbox_y();
@@ -1254,23 +1312,23 @@ void Manager_bullet::create_hero_aoe_bullet(Manager_hero& hero, Manager_enemy& e
 				}
 			}
 
-			if (max_health_enemy != UINT_MAX)
+			if (max_health_enemy != 1e9f)
 			{
 				max_health_enemy_index.push(max_health_enemy);
 				current_aoe_bullet++;
-				std::cout << "[AOE] Selected enemy #" << max_health_enemy
-					<< " with health=" << max_health
-					<< " | total selected=" << current_aoe_bullet << std::endl;
+				//std::cout << "[AOE] Selected enemy #" << max_health_enemy
+				//	<< " with health=" << max_health
+				//	<< " | total selected=" << current_aoe_bullet << std::endl;
 			}
-			else
-			{
-				std::cout << "[AOE] No valid enemy found in range for bullet #" << i << std::endl;
-			}
+			//else
+			//{
+			//	std::cout << "[AOE] No valid enemy found in range for bullet #" << i << std::endl;
+			//}
 		}
 
 		// === create bullet ===
-		std::cout << "[AOE] Begin creating bullets, total targets = "
-			<< max_health_enemy_index.get_size() << std::endl;
+		//std::cout << "[AOE] Begin creating bullets, total targets = "
+			//<< max_health_enemy_index.get_size() << std::endl;
 
 		while (max_health_enemy_index.get_size() != 0)
 		{
@@ -1286,35 +1344,35 @@ void Manager_bullet::create_hero_aoe_bullet(Manager_hero& hero, Manager_enemy& e
 						"Light",
 						Bullet_type::Light,
 						Unit_Type::Hero,
-						enemy[target_index]->get_hitbox_x(),
-						enemy[target_index]->get_hitbox_y());
+						enemy[target_index]->get_x(),
+						enemy[target_index]->get_y());
 
 					bullet[i]->load_image();
 					current_size++;
 					current_aoe_bullet--;
 
-					std::cout << "[AOE] Created bullet at enemy #" << target_index
-						<< " pos=(" << enemy[target_index]->get_hitbox_x()
-						<< "," << enemy[target_index]->get_hitbox_y() << ")"
-						<< " | Remaining bullets=" << current_aoe_bullet << std::endl;
+					//std::cout << "[AOE] Created bullet at enemy #" << target_index
+					//	<< " pos=(" << enemy[target_index]->get_hitbox_x()
+					//	<< "," << enemy[target_index]->get_hitbox_y() << ")"
+					//	<< " | Remaining bullets=" << current_aoe_bullet << std::endl;
 
 					bullet_created = true;
 					break;
 				}
 			}
 
-			if (!bullet_created)
-				std::cout << "[AOE] WARNING: bullet pool full, could not create bullet!" << std::endl;
+			//if (!bullet_created)
+				//std::cout << "[AOE] WARNING: bullet pool full, could not create bullet!" << std::endl;
 		}
 
 		hero.zero_aoe_elapsed();
-		std::cout << "[AOE] === AOE creation complete ===" << std::endl;
+		//std::cout << "[AOE] === AOE creation complete ===" << std::endl;
 	}
-	else
-	{
-		std::cout << "[AOE] Cooldown not ready. Elapsed=" << hero.get_aoe_elapsed()
-			<< " / CD=" << hero.get_aoe_cd() << std::endl;
-	}
+	//else
+	//{
+	//	std::cout << "[AOE] Cooldown not ready. Elapsed=" << hero.get_aoe_elapsed()
+	//		<< " / CD=" << hero.get_aoe_cd() << std::endl;
+	//}
 }
 
 void Manager_bullet::check_delete_Light(unsigned int bullet_index, Manager_enemy& enemy, float time)
@@ -1443,7 +1501,7 @@ void Manager_bullet::keep_move_to_enemy(unsigned int bullet_index, Manager_enemy
 	float hitbox = 0;
 	for (unsigned int i = 0; i < max_enemy_num; i++)
 	{
-		if (enemy[i] != nullptr)
+		if (enemy[i] != nullptr && enemy[i]->get_type() != Enemy_type::Upgrade)
 		{
 			float dx = enemy.get_hit_box_x(i) - bullet[bullet_index]->get_hitbox_x();
 			float dy = enemy.get_hit_box_y(i) - bullet[bullet_index]->get_hitbox_y();

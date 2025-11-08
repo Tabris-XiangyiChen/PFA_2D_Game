@@ -8,6 +8,7 @@ enum class Move_Status {
 	Left = 2,
 	Right = 3,
 	Dead = 4,
+	MAX_TYPES
 };
 
 enum class Unit_Type {
@@ -98,15 +99,15 @@ public:
 
 
 
-//The class of every unit, include the main charactor and enemies
+//The class of every unit which has a hitbox, include the main charactor and enemies
 class Unit
 {
 protected:
-	float locate_x, locate_y;
-	unsigned int hitbox;
-	float hitbox_center_x;
+	float locate_x, locate_y;  //Top left position
+	unsigned int hitbox;	// hitbox radius
+	float hitbox_center_x;	// hitbox center position
 	float hitbox_center_y;
-	Unit_Type unit_type;
+	Unit_Type unit_type;	//unit type
 
 public:
 	Unit() : 
@@ -133,31 +134,23 @@ public:
 		hitbox_center_y(0),
 		unit_type(ut) {}
 
-
-	//Load the image
-	//bool load_image(std::string filename);
-
-	//The default function of draw the image
-	//virtual void draw(GamesEngineeringBase::Window& canvas) = 0;
-
-	//Get the unit's X location
+	//Get the unit's top left X position
 	inline float get_x() { return locate_x; }
 	
-	//Get the unit's Y location
+	//Get the unit's top left Y position
 	inline float get_y() {	return locate_y; }
-
+	
+	//Get the unit's hitbox radius
 	inline unsigned int get_hitbox() { return hitbox; }
 
-	//inline unsigned int get_hitbox_x() { return hitbox_center_x; }
+	//Get the unit's hitbox center X position
 	inline float get_hitbox_x() { return hitbox_center_x; }
 
-	//inline unsigned int get_hitbox_y() { return hitbox_center_y; }
+	//Get the unit's hitbox center Y position
 	inline float get_hitbox_y() { return hitbox_center_y; }
-
 
 	//Get the inmage's width
 	virtual unsigned int get_width() = 0;
-
 
 	//Get the image's height
 	virtual unsigned int get_height() = 0;
@@ -171,9 +164,9 @@ class Charactor : public Unit
 {
 
 private:
-	GamesEngineeringBase::Image image[charactor_move_status_num];
+	GamesEngineeringBase::Image image[static_cast<int>(Move_Status::MAX_TYPES)];
 	int health; //charactor's health,storage the current health num
-	unsigned int speed;
+	unsigned int speed; //move speed
 	unsigned int attack;
 	float attack_cd;
 	float aoe_cd;
@@ -204,6 +197,7 @@ public:
 		m_status(Move_Status::Front) {
 	}
 
+	// Decrease health value
 	void suffer_attack(unsigned int attack) 
 	{ 
 		health -= attack; 
@@ -222,6 +216,27 @@ public:
 			return false;
 	}
 
+	bool load_image(std::string Heroname);
+
+	void draw(GamesEngineeringBase::Window& canvas, unsigned int x, unsigned int y);
+
+	void draw_incenter(GamesEngineeringBase::Window& canvas);
+
+	void update(GamesEngineeringBase::Window& canvas, float x, float y, Move_Status status);
+
+	void update(Move_Status stauts);
+
+	void upgrade() {
+		attack_cd = 0.2f;
+		aoe_num = 10;
+		std::cout << "upgrade!!" << std::endl;
+	}
+
+	void load(float x, float y,unsigned int hb, float hb_x, float hb_y, int hea, unsigned int att, 
+		float att_cd, float ao_cd, float aoe_ran, unsigned int aoe_n, float invin);
+
+	GamesEngineeringBase::Image& operator[](unsigned int index) { return image[index]; }
+
 	unsigned int get_attack() { return attack; }
 
 	float get_attack_cd() { return attack_cd; }
@@ -233,21 +248,6 @@ public:
 	unsigned int get_aoe_num() { return aoe_num; }
 
 	float get_invincible_time() { return invincible_time; }
-
-	bool load_image(std::string Heroname);
-
-	void draw(GamesEngineeringBase::Window& canvas, unsigned int x, unsigned int y);
-
-	void draw_incenter(GamesEngineeringBase::Window& canvas);
-
-	void update(GamesEngineeringBase::Window& canvas, float x, float y, Move_Status status);
-
-	void update(Move_Status stauts);
-
-	void load(float x, float y,unsigned int hb, float hb_x, float hb_y, int hea, unsigned int att, 
-		float att_cd, float ao_cd, float aoe_ran, unsigned int aoe_n, float invin);
-
-	GamesEngineeringBase::Image& operator[](unsigned int index) { return image[index]; }
 
 	//Get the inmage's width
 	inline unsigned int get_width() { return image[0].width; }
@@ -273,6 +273,7 @@ enum class Enemy_type
 	Bug = 1,
 	FlySpookmoth = 2,
 	Pebblin = 3,
+	Upgrade = 4,
 	MAX_TYPES
 };
 
@@ -289,10 +290,11 @@ class Enemy_index
 {
 	unsigned int num = static_cast<unsigned int>(Enemy_type::MAX_TYPES);
 	Enemy_data enemy_templates[static_cast<unsigned int>(Enemy_type::MAX_TYPES)] = {
-	{"Slime",         Enemy_type::Slime,          10,   50, 3, 0},
+	{"Slime",         Enemy_type::Slime,         10,   50, 3, 0},
 	{"Bug",           Enemy_type::Bug,            5,  100, 1, 0},
 	{"FlySpookmoth",  Enemy_type::FlySpookmoth,  10,    0, 5, 2},
-	{"Pebblin",       Enemy_type::Pebblin,       20,   10, 5, 0}
+	{"Pebblin",       Enemy_type::Pebblin,       20,   10, 5, 0},
+	{"Upgrade",		  Enemy_type::Upgrade,		  1,    0, 0, 0}
 	};
 	//std::string arr[enemy_type_n] = { Slime, Bug, FlySpookmoth, Pebblin};
 public:

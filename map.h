@@ -148,6 +148,7 @@ public:
 		tiles(nullptr),
 		trap(nullptr) {}
 
+	// return the index of the map when using the two-dimentional positon
 	unsigned int& at(unsigned int x, unsigned int y) { return tiles[y * map_width + x]; }
 
 	unsigned int get(unsigned int x, unsigned int y) { return tiles[y * map_width + x]; }

@@ -31,6 +31,7 @@ class Manager_hero
 	float invincible_time_elapsed = 0;
 	float attack_elapsed;
 	float aoe_elapsed;
+	bool is_upgraded = false;
 public:
 	Manager_hero(GamesEngineeringBase::Window& canvas);
 
@@ -63,6 +64,15 @@ public:
 	void load_hero_state(std::string filename);
 
 	void suffer_attack(unsigned int attack) { Hero->suffer_attack(attack); }
+
+	void upgrade() 
+	{
+		Hero->upgrade();
+	}
+
+	void set_upgrade(bool up) { is_upgraded = up; }
+
+	bool get_is_upgrade() { return is_upgraded; }
 
 	unsigned int get_hero_attack() { return Hero->get_attack(); }
 
@@ -208,12 +218,6 @@ class Manager_enemy
 	float create_threshold = 3.f;
 
 	float enemy_attack_time_elapsed[max_enemy_num];
-	//float enemy_attack_time_elapse = 0;
-
-	unsigned int slime_max_num = 10;
-	unsigned int slime_current_num = 0;
-	unsigned int bug_max_num = 5;
-	unsigned int bug_current_num = 0;
 
 public:
 	Manager_enemy(GamesEngineeringBase::Window& canvas);
@@ -224,9 +228,9 @@ public:
 
 	Position create_out_camera_pos_infinite(Manager_map& map, Camera& cam, bool if_near_cam);
 
-	void create_enemy(Manager_map& map,Camera& cam);
+	void create_enemy(Manager_map& map,Camera& cam, Manager_hero& hero);
 
-	void create_enemy_infinite(Manager_map& map, Camera& cam);
+	void create_enemy_infinite(Manager_map& map, Camera& cam, Manager_hero& hero);
 
 	void zero_enemy_attack_time_elapsed(unsigned int index) { enemy_attack_time_elapsed[index] = 0; }
 
