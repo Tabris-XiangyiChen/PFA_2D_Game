@@ -17,6 +17,7 @@ void Manager_hero::init()
 	invincible_time_elapsed = 0;
 	attack_elapsed = 0; 
 	aoe_elapsed = 0;
+	is_upgraded = false;
 }
 
 void Manager_hero::update(GamesEngineeringBase::Window& canvas, Manager_map& map, float time) 
@@ -218,7 +219,8 @@ void Manager_hero::save_hero_state(const std::string& filename)
 		<< invincible_time_elapsed << " "
 		<< attack_elapsed << " "
 		<< aoe_elapsed << " "
-		<< static_cast<int>(move_status)
+		<< static_cast<int>(move_status) << " "
+		<< is_upgraded
 		<< std::endl;
 
 	file.close();
@@ -252,7 +254,7 @@ void Manager_hero::load_hero_state(std::string filename)
 		>> health >> attack
 		>> attack_cd >> aoe_cd >> aoe_range >> aoe_num
 		>> invincible_time >> invincible_elapsed
-		>> atk_elapsed >> aoe_elapsed >> status_int;
+		>> atk_elapsed >> aoe_elapsed >> status_int >> is_upgraded;
 
 	file.close();
 	
