@@ -190,7 +190,7 @@ public:
 		attack(5),
 		attack_cd(0.5f),
 		invincible_time(1.f),
-		aoe_cd(1.f),
+		aoe_cd(5.f),
 		m_status(Move_Status::Front) {}
 
 	Charactor(float x, float y, int health, int speed, int attack) :
@@ -199,7 +199,7 @@ public:
 		speed(speed),
 		attack(attack),
 		attack_cd(0.5f),
-		aoe_cd(1.f),
+		aoe_cd(5.f),
 		invincible_time(1.f),
 		m_status(Move_Status::Front) {
 	}
@@ -289,10 +289,10 @@ class Enemy_index
 {
 	unsigned int num = static_cast<unsigned int>(Enemy_type::MAX_TYPES);
 	Enemy_data enemy_templates[static_cast<unsigned int>(Enemy_type::MAX_TYPES)] = {
-	{"Slime",         Enemy_type::Slime,          5,   50, 1, 0},
-	{"Bug",           Enemy_type::Bug,            7,  100, 2, 0},
+	{"Slime",         Enemy_type::Slime,          10,   50, 3, 0},
+	{"Bug",           Enemy_type::Bug,            5,  100, 1, 0},
 	{"FlySpookmoth",  Enemy_type::FlySpookmoth,  10,    0, 5, 2},
-	{"Pebblin",       Enemy_type::Pebblin,       15,   10, 5, 0}
+	{"Pebblin",       Enemy_type::Pebblin,       20,   10, 5, 0}
 	};
 	//std::string arr[enemy_type_n] = { Slime, Bug, FlySpookmoth, Pebblin};
 public:
@@ -430,7 +430,7 @@ class Bullet_index
 {
 	unsigned int num = static_cast<unsigned int>(Bullet_type::MAX_TYPES);
 	Bullet_data bullet_templates[static_cast<unsigned int>(Bullet_type::MAX_TYPES)] = {
-	{"Blue",         Bullet_type::Blue,         5, 1},
+	{"Blue",         Bullet_type::Blue,         5, 5},
 	{"Red",           Bullet_type::Red,         7, 2},
 	{"Light",	    Bullet_type::Light,        10, 20},
 	};
@@ -466,7 +466,7 @@ class Bullet : public Unit
 	Bullet_type type;
 	Unit_Type from;
 	GamesEngineeringBase::Image image[bullet_move_status_num];
-	float health = 10;
+	float health = 5;
 	unsigned int speed;
 	unsigned int attack;
 	Move_Status m_status = Move_Status::Front;

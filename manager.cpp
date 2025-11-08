@@ -49,7 +49,7 @@ void Manager_hero::update(GamesEngineeringBase::Window& canvas, Manager_map& map
 				pos = rebound({ Hero->get_hitbox_x(), Hero->get_hitbox_y() }, map.get_trap_position(i), hitbox_dist);
 				new_x = pos.x - static_cast<float>(Hero->get_width() / 2);
 				new_y = pos.y - static_cast<float>(Hero->get_height() / 2);
-				std::cout << " touch the trap" << std::endl;
+				//std::cout << " touch the trap" << std::endl;
 				Hero->update(canvas, new_x, new_y, move_status);
 				//return;
 			}
@@ -481,6 +481,8 @@ Manager_enemy::Manager_enemy(GamesEngineeringBase::Window& canvas)
 		move_status[i] = Move_Status::Front;
 		enemy_attack_time_elapsed[i] = 0;
 	}
+	score = 0;
+	current_size = 0;
 }
 
 Position Manager_enemy::create_out_camera_pos(Manager_map& map, Camera& cam, bool if_near_cam)
@@ -604,7 +606,7 @@ void Manager_enemy::create_enemy(Manager_map& map, Camera& cam)
 	static std::mt19937 gen(rd());         
 	static std::uniform_int_distribution<> dist(0, e_index.get_enemy_index_num() - 1);
 
-	if (current_size < max_enemy_num)
+	if (current_size < max_size)
 		if (enemy_create_time_elapsed > create_threshold)
 		{
 			for (unsigned int i = 0; i < max_enemy_num; i++)
@@ -621,7 +623,7 @@ void Manager_enemy::create_enemy(Manager_map& map, Camera& cam)
 					enemy_create_time_elapsed = 0.f;
 					create_threshold -= 0.2f;
 					create_threshold = max(create_threshold, 0.5f);
-					std::cout << "creat enemy" << std::endl;
+					//std::cout << "creat enemy" << std::endl;
 					break;
 				}
 			}
@@ -634,13 +636,12 @@ void Manager_enemy::create_enemy_infinite(Manager_map& map, Camera& cam)
 	static std::mt19937 gen(rd());
 	static std::uniform_int_distribution<> dist(0, e_index.get_enemy_index_num() - 1);
 
-	if (current_size < max_enemy_num && enemy_create_time_elapsed > create_threshold)
+	if (current_size < max_size && enemy_create_time_elapsed > create_threshold)
 	{
 		for (unsigned int i = 0; i < max_enemy_num; i++)
 		{
 			if (enemy[i] == nullptr)
 			{
-				// 使用无限地图逻辑生成坐标
 				Position pos = create_out_camera_pos_infinite(map, cam, true);
 				unsigned int index = dist(gen);
 
@@ -657,7 +658,7 @@ void Manager_enemy::create_enemy_infinite(Manager_map& map, Camera& cam)
 				// 加快生成速度，但有下限
 				create_threshold = max(create_threshold - 0.2f, 0.5f);
 
-				std::cout << "create enemy at (" << pos.x << ", " << pos.y << ")" << std::endl;
+				//std::cout << "create enemy at (" << pos.x << ", " << pos.y << ")" << std::endl;
 				break;
 			}
 		}
@@ -669,12 +670,14 @@ void Manager_enemy::delete_enemy(unsigned int i)
 {
 	if (enemy[i]->get_health() == 0)
 	{
+		score += e_index[enemy[i]->get_type()].health;
+		std::cout << "score: " << score << std::endl;
 		delete enemy[i];
 		enemy[i] = nullptr;
 		current_size--;
 		move_status[i] = Move_Status::Front;
 		enemy_attack_time_elapsed[i] = 0;
-		std::cout << "Destroyed: " << i << std::endl;
+		//std::cout << "Destroyed: " << i << std::endl;
 	}
 }
 
@@ -940,7 +943,7 @@ void Manager_enemy::save_enemy_state(const std::string& filename)
 	}
 
 	file << "Enemy States" << std::endl
-		<< current_size << " "
+		<< current_size << " " << score << " "
 		<< enemy_create_time_elapsed << std::endl;
 
 	for (unsigned int i = 0; i < max_enemy_num; i++) {
@@ -997,7 +1000,7 @@ void Manager_enemy::load_enemy_state(const std::string filename)
 			break;
 	}
 
-	file >> current_size >> create_threshold;
+	file >> current_size >> score >>create_threshold;
 
 	for (unsigned int i = 0; i < current_size; i++)
 	{

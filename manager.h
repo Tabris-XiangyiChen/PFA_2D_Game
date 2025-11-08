@@ -43,7 +43,10 @@ public:
 	void update_cd(float time)
 	{
 		attack_elapsed += time;
-		aoe_elapsed += time;
+		if (aoe_elapsed <= Hero->get_aoe_cd())
+		{
+			aoe_elapsed += time;
+		}
 		invincible_time_elapsed += time;
 	}
 
@@ -191,11 +194,13 @@ public:
 	unsigned int get_trap_attack(unsigned int index) { return map.get_trap(index)->get_attack(); }
 };
 
-const unsigned int max_enemy_num = 100;
+const unsigned int max_enemy_num = 50;
 class Manager_enemy
 {
 	Enemy_index e_index;
 	Enemy* enemy[max_enemy_num];
+	unsigned int max_size = 20;
+	unsigned int score;
 	unsigned int current_size = 0;
 	Move_Status move_status[max_enemy_num];
 
@@ -212,6 +217,8 @@ class Manager_enemy
 
 public:
 	Manager_enemy(GamesEngineeringBase::Window& canvas);
+
+	void set_mode(unsigned int max_enemy) { max_size = max_enemy; }
 
 	Position create_out_camera_pos(Manager_map& map, Camera& cam,bool if_near_cam);
 
@@ -257,6 +264,8 @@ public:
 
 	unsigned int get_enemy_current_num() { return current_size; }
 
+	unsigned int get_score() { return score; }
+
 	//Get the unit's X location
 	inline float get_x(unsigned int index) { return enemy[index] -> get_x(); }
 
@@ -289,7 +298,7 @@ public:
 	}
 };
 
-const unsigned int max_bullet_num = 100;
+const unsigned int max_bullet_num = 300;
 class Manager_bullet
 {
 	Bullet* bullet[max_bullet_num];
