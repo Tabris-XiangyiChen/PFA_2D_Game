@@ -128,7 +128,6 @@
     <ClCompile Include="manager.cpp" />
     <ClCompile Include="manager.h" />
     <ClCompile Include="map.cpp" />
-    <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="charactor.h" />
