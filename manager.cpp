@@ -1158,7 +1158,7 @@ void Manager_bullet::create_hero_bullet(Manager_hero& hero, Manager_enemy& enemy
 			if (bullet[i] == nullptr)
 			{
 				bullet[i] = new Bullet("Blue", Bullet_type::Blue, Unit_Type::Hero, 
-					hero.get_hitbox_x(), hero.get_hitbox_y(), 10, 250, hero.get_hero_attack());
+					hero.get_hitbox_x(), hero.get_hitbox_y(), 10, b_index[Bullet_type::Blue].speed, hero.get_hero_attack());
 				bullet[i]->load_image();
 				current_size++;
 				//std::cout << hero.get_hitbox_x() << hero.get_hitbox_y() << std::endl;
@@ -1183,7 +1183,7 @@ void Manager_bullet::create_hero_bullet_infinite(Manager_hero& hero, Manager_ene
 			if (bullet[i] == nullptr)
 			{
 				bullet[i] = new Bullet("Blue", Bullet_type::Blue, Unit_Type::Hero,
-					hero.get_hitbox_x(), hero.get_hitbox_y(), 10, 250, hero.get_hero_attack());
+					hero.get_hitbox_x(), hero.get_hitbox_y(), 10, b_index[Bullet_type::Blue].speed, hero.get_hero_attack());
 				bullet[i]->load_image();
 				current_size++;
 				//std::cout << hero.get_hitbox_x() << hero.get_hitbox_y() << std::endl;
@@ -1265,7 +1265,7 @@ void Manager_bullet::create_hero_aoe_bullet(Manager_hero& hero, Manager_enemy& e
 	if (hero.get_aoe_elapsed() > hero.get_aoe_cd())
 	{
 		std::cout << "AOE!!!" << std::endl;
-
+		aoe_Light_render_start = 0;
 		unsigned int current_aoe_bullet = 0;
 		My_Stack<unsigned int> max_health_enemy_index;
 		float max_health = 0.f;
@@ -1370,7 +1370,7 @@ void Manager_bullet::create_hero_aoe_bullet_infinite(Manager_hero& hero, Manager
 	if (hero.get_aoe_elapsed() > hero.get_aoe_cd())
 	{
 		std::cout << "AOE!!!" << std::endl;
-
+		aoe_Light_render_start = 0;
 		unsigned int current_aoe_bullet = 0;
 		My_Stack<unsigned int> max_health_enemy_index;
 		float max_health = 0.f;
@@ -1522,7 +1522,6 @@ void Manager_bullet::check_delete_Light(unsigned int bullet_index, Manager_enemy
 		if (aoe_Light_render_start > 0.5f)
 			delete_bullet(bullet_index);
 	}
-	aoe_Light_render_start += time;
 }
 
 void Manager_bullet::create_enemy_bullet(Manager_enemy& enemy)
@@ -1542,7 +1541,7 @@ void Manager_bullet::create_enemy_bullet(Manager_enemy& enemy)
 				if (bullet[i] != nullptr)
 					continue;
 				bullet[i] = new Bullet("Red", Bullet_type::Red, Unit_Type::Enenmy,
-					enemy[j]->get_hitbox_x(), enemy[j]->get_hitbox_y(), 4, enemy[j]->get_attack());
+					enemy[j]->get_hitbox_x(), enemy[j]->get_hitbox_y(), b_index[Bullet_type::Red].speed, enemy[j]->get_attack());
 				bullet[i]->load_image();
 				current_size++;
 				//std::cout << hero.get_hitbox_x() << hero.get_hitbox_y() << std::endl;
@@ -1889,7 +1888,8 @@ void Manager_bullet::update(GamesEngineeringBase::Window& canvas, Manager_map& m
 	if (enemy.get_enemy_current_num() > 0)
 		this->create_hero_bullet(hero, enemy);
 	this->create_enemy_bullet(enemy);
-
+	if (aoe_Light_render_start < 10)
+		aoe_Light_render_start += time;
 	
 	for (unsigned int i = 0; i < max_bullet_num; i++)
 	{
@@ -1942,7 +1942,8 @@ void Manager_bullet::update_infinite(GamesEngineeringBase::Window& canvas, Manag
 	if (enemy.get_enemy_current_num() > 0)
 		this->create_hero_bullet_infinite(hero, enemy, map);
 	this->create_enemy_bullet(enemy);
-
+	if (aoe_Light_render_start < 10)
+		aoe_Light_render_start += time;
 
 	for (unsigned int i = 0; i < max_bullet_num; i++)
 	{

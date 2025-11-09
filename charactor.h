@@ -432,8 +432,8 @@ class Bullet_index
 {
 	unsigned int num = static_cast<unsigned int>(Bullet_type::MAX_TYPES);
 	Bullet_data bullet_templates[static_cast<unsigned int>(Bullet_type::MAX_TYPES)] = {
-	{"Blue",         Bullet_type::Blue,         5, 5},
-	{"Red",           Bullet_type::Red,         7, 2},
+	{"Blue",         Bullet_type::Blue,         150, 5},
+	{"Red",           Bullet_type::Red,         50, 2},
 	{"Light",	    Bullet_type::Light,        10, 20},
 	};
 	//std::string arr[enemy_type_n] = { Slime, Bug, FlySpookmoth, Pebblin};
