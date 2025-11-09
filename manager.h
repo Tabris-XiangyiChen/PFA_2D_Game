@@ -9,7 +9,7 @@ Position static rebound(Position from, Position to, float hitbox_len)
 	float dx = from.x - to.x;
 	float dy = from.y - to.y;
 	float dist = sqrt(dx * dx + dy * dy);
-
+	//avoid it is too close
 	if (dist < 1e-4f)
 		return from;
 
@@ -20,6 +20,7 @@ Position static rebound(Position from, Position to, float hitbox_len)
 	float overlap = (hitbox_len - dist);
 	if (overlap <= 0.0f)
 		return from;
+	// push number is the half of the difference between both
 	float push = overlap * 0.5f;
 	return { from.x + nx * push , from.y + ny * push };
 }

@@ -297,6 +297,7 @@ void Camera::update(Manager_hero& hero)
 	locate_x = hero.get_x() + hero.get_width() / 2 - camera_width / 2;
 	locate_y = hero.get_y() + hero.get_height() / 2 - camera_height / 2;
 
+	// Determine if the camera is touching the map boundary
 	if (locate_x <= 0)
 	{
 		is_at_boundry = true;
@@ -489,21 +490,25 @@ Manager_enemy::Manager_enemy(GamesEngineeringBase::Window& canvas)
 
 Position Manager_enemy::create_out_camera_pos(Manager_map& map, Camera& cam, bool if_near_cam)
 {
+	//When I use srand() and rand(),it sometimes happen the continuous number are the same;
 	static std::random_device rd;
 	static std::mt19937 gen(rd());
 
 	Position pos{ 0, 0 };
 	float margin = 20.f;
 
-	if (if_near_cam) {
-
+	if (if_near_cam) 
+	{
+		// create random number from 0 to 3 to choose the direction to create the enemy
 		std::uniform_int_distribution<int> side_dist(0, 3);
+		// create random number in the camera's scale
 		std::uniform_int_distribution<int> offset_x(0, cam.get_cam_width());
 		std::uniform_int_distribution<int> offset_y(0, cam.get_cam_height());
 
 		int side = side_dist(gen);
-		switch (side) {
-		case 0: // Up
+		switch (side) 
+		{
+		case 0: // Up, current x + random number, and y - a margin number to create the position up the camera
 			pos.x = cam.get_x() + offset_x(gen);
 			pos.y = cam.get_y() - margin;
 			break;
@@ -521,11 +526,13 @@ Position Manager_enemy::create_out_camera_pos(Manager_map& map, Camera& cam, boo
 			break;
 		}
 	}
-	else {
+	else 
+	{
 		std::uniform_int_distribution<int> distX(0, map.get_map_width_pix());
 		std::uniform_int_distribution<int> distY(0, map.get_map_height_pix());
-
-		while (true) {
+		// rondom create the position in the map, if it is not in the camera, then return it
+		while (true) 
+		{
 			pos.x = static_cast<float>(distX(gen));
 			pos.y = static_cast<float>(distY(gen));
 
@@ -535,7 +542,7 @@ Position Manager_enemy::create_out_camera_pos(Manager_map& map, Camera& cam, boo
 				break;
 		}
 	}
-
+	// make sure it is in the map
 	pos.x = max(0, min(pos.x, map.get_map_width_pix()));
 	pos.y = max(0, min(pos.y, map.get_map_height_pix()));
 
@@ -552,13 +559,15 @@ Position Manager_enemy::create_out_camera_pos_infinite(Manager_map& map, Camera&
 	float map_w = map.get_map_width_pix();
 	float map_h = map.get_map_height_pix();
 
-	if (if_near_cam) {
+	if (if_near_cam) 
+	{
 		std::uniform_int_distribution<int> side_dist(0, 3);
 		std::uniform_int_distribution<int> offset_x(0, cam.get_cam_width());
 		std::uniform_int_distribution<int> offset_y(0, cam.get_cam_height());
 
 		int side = side_dist(gen);
-		switch (side) {
+		switch (side) 
+		{
 		case 0: // Up
 			pos.x = fmod(cam.get_x() + offset_x(gen), map_w);
 			pos.y = fmod(cam.get_y() - margin + map_h, map_h);
@@ -577,11 +586,13 @@ Position Manager_enemy::create_out_camera_pos_infinite(Manager_map& map, Camera&
 			break;
 		}
 	}
-	else {
+	else 
+	{
 		std::uniform_real_distribution<float> distX(0.f, map_w);
 		std::uniform_real_distribution<float> distY(0.f, map_h);
 
-		while (true) {
+		while (true) 
+		{
 			pos.x = distX(gen);
 			pos.y = distY(gen);
 
@@ -603,21 +614,25 @@ Position Manager_enemy::create_out_camera_pos_infinite(Manager_map& map, Camera&
 
 void Manager_enemy::create_enemy(Manager_map& map, Camera& cam, Manager_hero& hero)
 {
-	//If only use srand(),it sometimes happen the continuous enemy are the same;
+	//When I use srand() and rand(),it sometimes happen the continuous number are the same;
 	static std::random_device rd;         
 	static std::mt19937 gen(rd());
 	// avoid create the upgrade
 	static std::uniform_int_distribution<> dist(0, e_index.get_enemy_index_num() - 2);
 
+	//not touch the max amount
 	if (current_size < max_size)
 		if (enemy_create_time_elapsed > create_threshold)
 		{
 			for (unsigned int i = 0; i < max_enemy_num; i++)
 			{
+				//find a null place
 				if (enemy[i] == nullptr)
 				{
+					//create a position
 					Position pos = create_out_camera_pos(map, cam, true);
 					unsigned int index = dist(gen);
+					// create enemy
 					enemy[i] = new Enemy(e_index[index].name, e_index[index].type, pos.x, pos.y, e_index[index].health,
 						e_index[index].speed, e_index[index].attack, e_index[index].attack_cd);
 					//enemy_attack_time_elapsed[i] = e_index[index].attack_cd;
@@ -631,7 +646,7 @@ void Manager_enemy::create_enemy(Manager_map& map, Camera& cam, Manager_hero& he
 				}
 			}
 		}
-
+	//create upgrade, the upgrade just like a enemy
 	if (score > 100 && hero.get_is_upgrade() == false)
 	{
 		for (unsigned int i = 0; i < max_enemy_num; i++)
@@ -729,49 +744,6 @@ void Manager_enemy::update(GamesEngineeringBase::Window& canvas, Manager_map& ma
 	create_enemy(map, cam, hero);
 	
 	float speed;
-	/*for (unsigned int i = 0; i < max_enemy_num; i++)
-	{
-		if (enemy[i] != nullptr)
-		{
-			int x = enemy[i]->get_x();
-			int y = enemy[i]->get_y();
-			//move_status = Move_Status::Front;
-			// TODO: set the speed when hero at slime's southeast and so on to make the move speed equal the
-			// horizontal and virtical speed;
-			if (hero.get_hit_box_y() < enemy[i]->get_hit_box_y())
-			{
-				//move_status = Move_Status::Back;
-				y -= enemy[i]->get_speed();
-			}
-			if (hero.get_hit_box_y() > enemy[i]->get_hit_box_y())
-			{
-				//move_status = Move_Status::Front;
-				y += enemy[i]->get_speed();
-			}
-			if (hero.get_hit_box_x() < enemy[i]->get_hit_box_x())
-			{
-				move_status[i] = Move_Status::Left;
-				x -= enemy[i]->get_speed();
-			}
-			if (hero.get_hit_box_x() > enemy[i]->get_hit_box_x())
-			{
-				move_status[i] = Move_Status::Right;
-				x += enemy[i]->get_speed();
-			}
-			if (hero.get_hit_box_x() == enemy[i]->get_hit_box_x() && hero.get_hit_box_y() == enemy[i]->get_hit_box_y())
-			{
-				move_status[i] = Move_Status::Front;
-			}
-
-			x = max(0, x);
-			x = min(static_cast<int>(map.get_map_width_pix()) - static_cast<int>(enemy[i] -> get_width()), x);
-			y = max(0, y);
-			y = min(static_cast<int>(map.get_map_height_pix()) - static_cast<int>(enemy[i] -> get_height()), y);
-			enemy[i] -> update(canvas, x, y, move_status[i]);
-		}
-	}*/
-
-
 	for (unsigned int i = 0; i < max_enemy_num; i++)
 	{
 		if (enemy[i] == nullptr) continue;
@@ -803,7 +775,7 @@ void Manager_enemy::update(GamesEngineeringBase::Window& canvas, Manager_map& ma
 		float new_x = enemy[i]->get_hitbox_x() + dx * speed;
 		float new_y = enemy[i]->get_hitbox_y() + dy * speed;
 
-
+		// avoid enemy overloop,make they reboud from each other
 		for (int j = 0; j < max_enemy_num; ++j)
 		{
 			if (i == j || enemy[j] == nullptr) continue;
@@ -829,7 +801,9 @@ void Manager_enemy::update(GamesEngineeringBase::Window& canvas, Manager_map& ma
 		float dist_enemy_to_hero = sqrt(dx3 * dx3 + dy3 * dy3);
 		float mid_dist = static_cast<float>(hero.get_hitbox() + enemy[i]->get_hitbox());
 
-		if (dist_enemy_to_hero < mid_dist && dist_enemy_to_hero > 0.1f && hero.get_invincible_time_elapsed() > hero.get_invincible_time()) {
+		// if enemy and hero's distance is shorter than the sum of their hitbox, hero get hurt and zero the invincible time elapsed
+		if (dist_enemy_to_hero < mid_dist && dist_enemy_to_hero > 0.1f && hero.get_invincible_time_elapsed() > hero.get_invincible_time()) 
+		{
 			hero.suffer_attack(e_index[enemy[i]->get_type()].attack);
 			hero.zero_invincible_time_elapsed();
 		}
@@ -1462,7 +1436,7 @@ Position Manager_bullet::set_forward(unsigned int bullet_index, Manager_enemy& e
 	//float hitbox = 0;
 	for (unsigned int i = 0; i < max_enemy_num; i++)
 	{
-		if (enemy[i] != nullptr)
+		if (enemy[i] != nullptr && enemy[i]->get_type() != Enemy_type::Upgrade)
 		{
 			float dx = enemy.get_hit_box_x(i) - bullet[bullet_index]->get_hitbox_x();
 			float dy = enemy.get_hit_box_y(i) - bullet[bullet_index]->get_hitbox_y();
@@ -1697,17 +1671,20 @@ void Manager_bullet::update(GamesEngineeringBase::Window& canvas, Manager_map& m
 				delete_bullet(i);
 				continue;
 			}
+			// bullet from hero
 			if (bullet[i]->get_from() == Unit_Type::Hero && bullet[i]->get_type() == Bullet_type::Blue)
 			{
 				keep_move_to_enemy(i, enemy, time);
 				continue;
 			}
+			// bullet from enemy
 			if (bullet[i]->get_from() == Unit_Type::Enenmy)
 			{
 				bullet[i]->sub_health(time);
 				move_to_nearest_hero(i, hero, time);
 				continue;
 			}
+			// bullet from hero and it is Lighting
 			if (bullet[i]->get_from() == Unit_Type::Hero && bullet[i]->get_type() == Bullet_type::Light)
 			{
 				check_delete_Light(i, enemy, time);
