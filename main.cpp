@@ -155,6 +155,7 @@ int main()
     float button_threshold = 1.f;
     float game_runnig_elapsed = 0;
     float game_runnig_threshold = 120.f;
+    float hero_dead_time_elasped = 0;
 
 	Manager_hero hero(canvas);
 	Manager_map map(canvas);
@@ -216,8 +217,15 @@ int main()
         //if hero dead ,can't continue,game stop, press Q quit the game 
         if (hero.get_health() <= 0 && state == GameState::PLAYING)
         {
-            if_continue == false;
-            is_stop = true;
+            hero_dead_time_elasped += dt;
+            if (hero_dead_time_elasped > 10.0f)
+                hero_dead_time_elasped = 10.0f;
+
+            if (hero_dead_time_elasped > 0.5f)
+            {
+                if_continue == false;
+                is_stop = true;
+            }
         }
             
         switch (state)
@@ -284,7 +292,7 @@ int main()
                     state = GameState::PLAYING;
                     button_elapsed = 0;
                     game_runnig_elapsed = 0;
-                    std::cout << "Switched to SURVIVAL mode" << std::endl;
+                    std::cout << "Switched to NORMAL INFINITE mode" << std::endl;
                 }
 
                 else if (canvas.keyPressed('4') && button_elapsed >= button_threshold)
@@ -299,7 +307,7 @@ int main()
                     state = GameState::PLAYING;
                     button_elapsed = 0;
                     game_runnig_elapsed = 0;
-                    std::cout << "Switched to SURVIVAL mode" << std::endl;
+                    std::cout << "Switched to HARD INFINITE mode" << std::endl;
                 }
 
                 if (canvas.keyPressed('L') && button_elapsed >= button_threshold)

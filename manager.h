@@ -21,7 +21,7 @@ Position static rebound(Position from, Position to, float hitbox_len)
 	if (overlap <= 0.0f)
 		return from;
 	// push number is the half of the difference between both
-	float push = overlap * 0.5f;
+	float push = overlap * 0.7f;
 	return { from.x + nx * push , from.y + ny * push };
 }
 
@@ -211,7 +211,7 @@ class Manager_enemy
 	Enemy_index e_index;
 	Enemy* enemy[max_enemy_num];
 	unsigned int max_size = 20;
-	unsigned int score;
+	unsigned int score = 0;
 	unsigned int current_size = 0;
 	Move_Status move_status[max_enemy_num];
 
@@ -321,7 +321,11 @@ public:
 
 	Position set_forward(unsigned int bullet_index, Manager_enemy& enemy);
 
+	Position set_forward_infinite(unsigned int bullet_index, Manager_enemy& enemy, Manager_map& map);
+
 	void keep_move_to_enemy(unsigned int bullet_index, Manager_enemy& enemy, float time);
+
+	void keep_move_to_enemy_infinite(unsigned int bullet_index, Manager_enemy& enemy, float time);
 
 	void move_to_nearest_hero(unsigned int bullet_index, Manager_hero& hero, float time);
 
@@ -333,7 +337,11 @@ public:
 
 	void create_hero_bullet(Manager_hero& hero, Manager_enemy& enemy);
 
+	void create_hero_bullet_infinite(Manager_hero& hero, Manager_enemy& enemy, Manager_map& map);
+
 	void create_hero_aoe_bullet(Manager_hero& hero, Manager_enemy& enemy, Manager_map& map);
+
+	void create_hero_aoe_bullet_infinite(Manager_hero& hero, Manager_enemy& enemy, Manager_map& map);
 
 	void check_delete_Light(unsigned int bullet_index, Manager_enemy& enemy, float time);
 

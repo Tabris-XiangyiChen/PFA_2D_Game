@@ -505,6 +505,17 @@ public:
 		speed(speed),
 		attack(attack){}
 
+	Bullet(std::string name, Bullet_type ty, Unit_Type fr, float x, float y,
+		float hea, unsigned int speed, unsigned int attack) :
+		bullet_name(name),
+		type(ty),
+		from(fr),
+		Unit(x, y, Unit_Type::Bullet),
+		health(hea),
+		speed(speed),
+		attack(attack) {
+	}
+
 	bool load_image();
 
 	void draw(GamesEngineeringBase::Window& canvas, int x, int y);
