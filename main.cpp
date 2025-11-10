@@ -18,7 +18,7 @@ enum class GameMode {
     HARD_INFINITE
 };
 
-void load_game_mode(std::string filename, GameMode mode, float& game_runnig_elapsed)
+void load_game_mode(std::string filename, GameMode& mode, float& game_runnig_elapsed)
 {
     std::ifstream file(filename, std::ios::in);
     if (!file.is_open()) {
@@ -164,6 +164,18 @@ int main()
 	
 	Manager_enemy ene(canvas);
 	Manager_bullet bul(canvas);
+
+    hero.init();
+    //hero = Manager_hero(canvas);
+    map.map_init("./Resource/map/normal.txt");
+    cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
+    //ene = Manager_enemy(canvas);
+    ene.set_mode(20);
+    //bul = Manager_bullet(canvas);
+    //state = GameState::PLAYING;
+    //button_elapsed = 0;
+    //game_runnig_elapsed = 0;
+
 	//Game loop
 	while (state != GameState::EXIT)
 	{
@@ -312,6 +324,7 @@ int main()
 
                 if (canvas.keyPressed('L') && button_elapsed >= button_threshold)
                 {
+                    
                     load_game_mode("save.txt", mode, game_runnig_elapsed);
 
                     hero.init();
