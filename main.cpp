@@ -165,17 +165,6 @@ int main()
 	Manager_enemy ene(canvas);
 	Manager_bullet bul(canvas);
 
-    hero.init();
-    //hero = Manager_hero(canvas);
-    map.map_init("./Resource/map/normal.txt");
-    cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
-    //ene = Manager_enemy(canvas);
-    ene.set_mode(20);
-    //bul = Manager_bullet(canvas);
-    //state = GameState::PLAYING;
-    //button_elapsed = 0;
-    //game_runnig_elapsed = 0;
-
 	//Game loop
 	while (state != GameState::EXIT)
 	{
@@ -328,8 +317,8 @@ int main()
                     load_game_mode("save.txt", mode, game_runnig_elapsed);
 
                     hero.init();
-                    map.map_init("./Resource/map/tiles.txt");
-                    cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
+                    //map.map_init("./Resource/map/tiles.txt");
+                    //cam.camera_init(canvas, map.get_map_width_pix(), map.get_map_height_pix());
                     ene = Manager_enemy(canvas);
                     bul = Manager_bullet(canvas);
                     state = GameState::PLAYING;
